@@ -49,7 +49,7 @@ void Plot::mainloop(void *arg) {
     
     ctx->draw_window(&ctx->plot, ctx->win_params);
 
-
+/*
     static int x = 0;
     x = ++x % 5;
 
@@ -86,7 +86,7 @@ void Plot::mainloop(void *arg) {
         params1->push_back(0, i, ret);
     }
 
-    
+    */
     return;
 
 
@@ -119,6 +119,13 @@ Plot::Plot() : nWindows(0) {
 
 int Plot::plot_graph(Plot_Window_params *win_params, const char *title) {
 
+    if(!win_params) {
+        
+        myPrintf("No graph to plot");
+        return -1;
+    }
+    
+    
     nWindows = win_params->count();
 
     plot_params *params = win_params->plotparm;
@@ -280,7 +287,7 @@ void Plot::draw_window(splot *plot, Plot_Window_params *win_params) {
                 if(kv.second.size())
                 {
                     SDL_RenderDrawLines(plot->renderer, &kv.second[0], kv.second.size()); 
-                    kv.second.clear();
+                   // kv.second.clear();
                 }
 
             }
@@ -461,14 +468,14 @@ void Plot::draw_points(
             float circle_y1 = params->plot_position.y + params->plot_position.h - ((tmp->y - params->min.y) / params->scale.y) * scale_y_num;
 
         //    myPrintf("(%f , %f)",circle_x1, circle_y1 );
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+           // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
-            if (params->dot)
-                fill_circle(renderer, circle_x1, circle_y1, DOT_RADIUS);
+      //      if (params->dot)
+            //    fill_circle(renderer, circle_x1, circle_y1, DOT_RADIUS);
 
             SDL_SetRenderDrawColor(renderer, (caption_item->caption_color & 0xFF0000) >> 16,
                     (caption_item->caption_color & 0x00FF00) >> 8,
-                    caption_item->caption_color & 0x0000FF, 255);
+                   caption_item->caption_color & 0x0000FF, 255);
 
             if (params->dot)
                 fill_circle(renderer, circle_x1, circle_y1, DOT_RADIUS - 2);
@@ -550,7 +557,11 @@ void Plot::draw_scale_graduation(SDL_Renderer * renderer,
         }
 
         char text[10];
-        sprintf(text, "%d", (int) current_scale);
+        if( params->max.x - params->min.x < 5.0)
+        sprintf(text, "%.2f", current_scale);
+        else
+         sprintf(text, "%d", (int)current_scale);
+        
 
         //        SDL_Surface *caption_text_surface = TTF_RenderText_Blended(font, text, font_color);
         SDL_Rect caption_text;
@@ -592,7 +603,11 @@ void Plot::draw_scale_graduation(SDL_Renderer * renderer,
         }
 
         char text[10];
-        sprintf(text, "%d", (int) current_scale);
+        if( params->max.y - params->min.y < 5.0)
+        sprintf(text, "%.2f", current_scale);
+        else
+         sprintf(text, "%d", (int)current_scale);
+        
 
         //        SDL_Surface *caption_text_surface = TTF_RenderText_Blended(font, text, font_color);
         SDL_Rect caption_text;

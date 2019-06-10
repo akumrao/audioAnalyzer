@@ -562,6 +562,18 @@ coordlist push_back_coord(coordlist list, int caption_id, float x, float y) {
     }
 }
 
+coordlist push_back_coords(coordlist list, int caption_id, float *points, int size) {
+
+    for (int i = 0; i < size; ++i) {
+
+        list = push_back_coord(list, caption_id, i, points[i]);
+
+    }
+    
+    return list;
+}
+
+
 /**
  * @brief print_list_coord
  *      print coordinate table
