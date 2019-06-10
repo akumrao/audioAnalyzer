@@ -25,8 +25,6 @@
 #include "SDL_font.h"
 
 
-#include "dump.h"
-
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>

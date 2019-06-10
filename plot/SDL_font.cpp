@@ -10,7 +10,6 @@
 
 #include <SDL2/SDL.h>
 #include "SDL_font.h"
-#include "font_basic.h"
 /* ---- 8x8 font definition ---- */
 
 /* Originally part of SDL2_gfx */
@@ -390,9 +389,6 @@ void SDL_CleanupTextDrawing(void) {
 
 //dump.cpp
 ////////////////////////////////////////////////////////////////////////////////////////////////
-#include "dump.h" 
-
-
 
 FILE *fpDump = NULL;
 

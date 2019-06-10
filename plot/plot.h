@@ -13,8 +13,6 @@
 #else
 #include "SDL2/SDL.h"
 #endif
-//#include <list>
-#include "linked_list.h"
 
 #include "SDL_font.h"
 
