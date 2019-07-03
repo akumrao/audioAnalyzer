@@ -463,14 +463,22 @@ void Plot::draw_points(
 
       
     while (tmp != NULL) {
-        if (tmp->caption_id == caption_item->caption_id) {
+        if (tmp->caption_id != caption_item->caption_id)
+        {
+             isFirst = 1;
+
+            previous_x = 0;
+            previous_y = 0;
+            caption_item->caption_id = tmp->caption_id ;
+        }
+        {
             float circle_x1 = params->plot_position.x + ((tmp->x - params->min.x) / params->scale.x) * scale_x_num;
             float circle_y1 = params->plot_position.y + params->plot_position.h - ((tmp->y - params->min.y) / params->scale.y) * scale_y_num;
 
         //    myPrintf("(%f , %f)",circle_x1, circle_y1 );
            // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 
-      //      if (params->dot)
+           // if (params->dot)
             //    fill_circle(renderer, circle_x1, circle_y1, DOT_RADIUS);
 
             SDL_SetRenderDrawColor(renderer, (caption_item->caption_color & 0xFF0000) >> 16,

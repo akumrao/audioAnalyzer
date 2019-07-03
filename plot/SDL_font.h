@@ -6,10 +6,6 @@
 #include <map>
 #include <vector>
 //#include "begin_code.h"
-/* Set up for C function definitions, even when using C++ */
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 /* Function prototypes */
 
@@ -117,7 +113,7 @@ struct Pair {
     Pair() : x(0), y(0) {
     }
 
-    Pair(int ix, int iy) : x(ix), y(iy) {
+    Pair(float ix, float iy) : x(ix), y(iy) {
     }
     
      Pair (std::initializer_list<float> l)
@@ -274,7 +270,7 @@ typedef struct Plot_params_struct {
 
     Plot_params_struct(const char * caption_x, const char * caption_y, captionlist caption_lst, coordlist coordinate_lst, int w=400, int h=400, Pair lscale={0,0}, Pair lmax={0,0}, Pair lmin={0,0} ) : update(true),texTarget(NULL), screen_width(w), screen_heigth(h), scale(lscale), max(lmax), min(lmin), scale_x_num(0), scale_y_num(0), colPos(0),rowPos(0) {
 
-        dot = true;
+        dot = false;
         grid= true;
 
         caption_text_x = caption_x;
@@ -347,8 +343,17 @@ typedef Plot_Window_params* plotwinlist;
 
 
 //----------------------------------------
+template <typename T>
+coordlist push_back_coords(coordlist list, int caption_id, T *points, int size) {
 
-coordlist push_back_coords(coordlist list, int caption_id, float *points, int size);
+    for (int i = 0; i < size; ++i) {
+
+        list = push_back_coord(list, caption_id, i, points[i]);
+
+    }
+    
+    return list;
+}
     
 /**
  * @brief push_back_coord
@@ -2144,9 +2149,6 @@ plotwinlist clear_plot_win(plotwinlist list);
 
 /////////////////////////////////////////////////////////////////////////////
 
-#ifdef __cplusplus
-}
-#endif
 //#include "close_code.h"
 
 #endif /* SDL_font_h_ */
