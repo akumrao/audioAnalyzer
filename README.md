@@ -1,6 +1,7 @@
 # Audio Analyzer
 
-Small library using SDL2 and SDL_TTF used to analyze audio stream and  plot points into a 2D graph at webpages
+Small library using SDL2 and SDL_TTF used to analyze audio stream and  plot points into a 2D graph at webpages.
+
 It renders graph using webassemply at HTML5 canvas. Which makes it very fast.
 It displays Audio, FFT, Tonality, Spreading Function, SNR, SMR etc
 
