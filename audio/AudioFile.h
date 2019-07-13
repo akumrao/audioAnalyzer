@@ -12,7 +12,7 @@
 #include <vector>
 #include <assert.h>
 #include <string>
-
+#include "../plot/plot.h"
 
 //=============================================================
 /** The different types of audio file, plus some other types to 
@@ -88,7 +88,7 @@ public:
     
     bool openWave (std::string filePath);
     
-    bool analyzeWave(std::FILE *file, std::string stats, std::string graph);
+    bool analyzeWave();
     
     /** Saves an audio file to a given file path.
      * @Returns true if the file was successfully saved
@@ -165,7 +165,10 @@ private:
     
     //=============================================================
     AudioFileFormat determineAudioFileFormat (std::vector<uint8_t>& fileData);
+    
+    public:
     bool decodeWaveFile (std::vector<uint8_t>& fileData);
+    private:
     bool decodeAiffFile (std::vector<uint8_t>& fileData);
     
     //=============================================================
@@ -209,7 +212,9 @@ private:
     int totalSamplesPerChannel;
     struct header_file  meta;
 
-    
+    public:
+
+    plot_params *params1; 
 };
 
 #endif /* AudioFile_h */

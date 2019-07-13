@@ -16,18 +16,97 @@ using namespace std;
 #include "audio/Psycho_anal.h"
 #include <string.h>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten/emscripten.h>
+
+
+extern "C" {
+
+int EMSCRIPTEN_KEEPALIVE fib(int n) {
+  int i, t, a = 0, b = 1;
+  for (i = 0; i < n; i++) {
+    t = a + b;
+    a = b;
+    b = t;
+  }
+  return b;
+}
+
+int EMSCRIPTEN_KEEPALIVE setSrcImage(BYTE *jpegData,  unsigned long size)
+{
+    //EM_ASM({ console.log(size); });
+    printf(" size = %d \n",  size);
+
+    AudioFile<double> audioFile;
+    std::vector<uint8_t> fileData(jpegData, jpegData+size);
+    
+    bool ret1 = audioFile.decodeWaveFile(fileData);
+
+
+    //audioFile.printSummary();
+    
+    
+    plotwinlist plotwin_list = NULL;
+
+   // Psycho_anal psycho_anal(44100);
+    
+   
+  // plotwin_list = psycho_anal.plotwin_list;
+    
+     plotwin_list = audioFile.plotwin_list;
+
+
+   // audioFile.printSummary();
+    
+     
+     
+     
+    
+    Plot plot;
+    plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
+
+    int ret = plot.plot_graph(plotwin_list, "Plot");
+
+    if (ret == EXIT_FAILURE) {
+        printf("plot_graph return with status %d\n", ret);
+        return EXIT_FAILURE;
+    }
+
+
+
+    printf(" ret = %d \n",  ret);
+
+    EM_ASM({ console.log('setSrcImage done'); });
+    return 99;
+}
+
+}
+#else
+
 int main(int argc, char* argv[]) {
 
    printf("plot_graph\n");
-     
-    plotwinlist plotwin_list = NULL;
+   
+   
+   AudioFile<double> audioFile;
+
+    
+   
+    //audioFile.analyzeWave();
+   
+           
 
     Psycho_anal psycho_anal(44100);
     
    
-    plotwin_list = psycho_anal.plotwin_list;
+   // plotwin_list = psycho_anal.plotwin_list;
+
     
-     /*
+    bool ret1 = audioFile.load("/root/Desktop/delete/test.wav");
+
+    audioFile.printSummary();
+    
+  /*
 
     {
         //populate caption list
@@ -73,19 +152,17 @@ int main(int argc, char* argv[]) {
         // params->screen_width = 500;
         // params->screen_heigth = 500;
 
-        params->scale.x = 1;
-        params->scale.y = 10;
+
         params->max.x = 10;
         params->max.y = 100;
 
-            params->scale.x = 1;
-            params->scale.y = 10;
-            params->max.x = 10;
-            params->max.y = 100;
+
+        params->max.x = 10;
+        params->max.y = 100;
 
 
         //  Plot_Window_params win_param;
-        plotwin_list = push_back_plot_win(plotwin_list, params);
+        push_back_plot_win( params);
 
     }
     {
@@ -108,7 +185,7 @@ int main(int argc, char* argv[]) {
         coordinate_list = push_back_coord(coordinate_list, 0, -1, -8);
         coordinate_list = push_back_coord(coordinate_list, 0, 0, 0);
         coordinate_list = push_back_coord(coordinate_list, 0, 0, 9);
-        coordinate_list = push_back_coord(coordinate_list, 0, 1, 5);
+        coordinate_list = push_back_coord(coordinate_list, 0, 1, 5);audio/AudioFile.cpp:77:29: error: expected identifier before '{' token
         coordinate_list = push_back_coord(coordinate_list, 0, 2, 12);
         coordinate_list = push_back_coord(coordinate_list, 0, 3, 18);
         coordinate_list = push_back_coord(coordinate_list, 0, 4, 3);
@@ -117,18 +194,17 @@ int main(int argc, char* argv[]) {
 
         //populate plot parameter object
         plot_params *params = new plot_params("Time (s)", "Speed (Mbit/s)", caption_list, coordinate_list);
-        params->scale.x = 1;
-        params->scale.y = 2;
+
         params->max.x = +5;
         params->max.y = 20;
         params->min.x = -5;
         params->min.y = -20;
 
         //  Plot_Window_params win_param;
-        plotwin_list = push_back_plot_win(plotwin_list, params);
+        push_back_plot_win(params);
 
     }
-
+*/
    
      {
          //populate caption list
@@ -148,18 +224,18 @@ int main(int argc, char* argv[]) {
 
          //populate plot parameter object
          plot_params *params = new plot_params("x", "Y", caption_list, coordinate_list);
-            params->scale.x = .25;
-            params->scale.y = .2;
+
          //  Plot_Window_params win_param;
-         plotwin_list = push_back_plot_win(plotwin_list, params);
+         push_back_plot_win(params);
 
      }
-     */
+   
 
-    Plot plot;
+    Plot plot;  //std::bind( &Foo::print_add, foo, _1 );
+    // using std::placeholders::_1;
+  //  plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
 
-
-    int ret = plot.plot_graph(plotwin_list, "Plot");
+    int ret = plot.plot_graph("Plot");
 
     if (ret == EXIT_FAILURE) {
         printf("plot_graph return with status %d\n", ret);
@@ -168,3 +244,6 @@ int main(int argc, char* argv[]) {
 
     return EXIT_SUCCESS;
 }
+
+
+#endif

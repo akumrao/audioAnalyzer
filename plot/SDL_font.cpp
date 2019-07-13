@@ -10,6 +10,8 @@
 
 #include <SDL2/SDL.h>
 #include "SDL_font.h"
+
+ plotwinlist plotwin_list = NULL;
 /* ---- 8x8 font definition ---- */
 
 /* Originally part of SDL2_gfx */
@@ -563,7 +565,6 @@ coordlist push_back_coord(coordlist list, int caption_id, float x, float y) {
 }
 
 
-
 /**
  * @brief print_list_coord
  *      print coordinate table
@@ -620,21 +621,21 @@ plotwinlist clear_plot_win(plotwinlist list) {
  * @param surface
  *      SDL surface ptr
  */
-plotwinlist push_back_plot_win(plotwinlist list, plot_params* plotparm) {
+void push_back_plot_win( plot_params* plotparm) {
     Plot_Window_params* plot_win_new_item = (Plot_Window_params*) malloc(sizeof (Plot_Window_params));
     plot_win_new_item->plotparm = plotparm;
 
     plot_win_new_item->nxt = NULL;
 
-    if (list == NULL) {
-        return plot_win_new_item;
+    if (plotwin_list == NULL) {
+        plotwin_list =  plot_win_new_item;
     } else {
-        Plot_Window_params* temp = list;
+        Plot_Window_params* temp = plotwin_list;
         while (temp->nxt != NULL) {
             temp = temp->nxt;
         }
         temp->nxt = plot_win_new_item;
-        return list;
+
     }
 }
 

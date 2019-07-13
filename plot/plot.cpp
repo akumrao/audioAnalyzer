@@ -24,7 +24,7 @@
 #include "math.h"
 #include "SDL_font.h"
 
-
+ extern plotwinlist plotwin_list ;
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
@@ -77,8 +77,8 @@ void Plot::mainloop(void *arg) {
     params1->update = true;
     for (int i = 0; i < 2048; ++i) {
 
-        float sineStep = 2 * M_PI * i * 440 / 44100;
-         float ret;
+        double sineStep = 2 * M_PI * i * 440 / 44100;
+         double ret;
         if(x < 4)
          ret=  x + (120 * sin(sineStep)) + 128;
         else
@@ -117,8 +117,9 @@ Plot::Plot() : nWindows(0) {
 
 }
 
-int Plot::plot_graph(Plot_Window_params *win_params, const char *title) {
+int Plot::plot_graph( const char *title) {
 
+    Plot_Window_params *win_params = plotwin_list;
     if(!win_params) {
         
         myPrintf("No graph to plot");
@@ -228,6 +229,9 @@ void Plot::clean_plot(splot *plot, plot_params *params) {
 
 void Plot::draw_window(splot *plot, Plot_Window_params *win_params) {
 
+    if (f_callback)
+        f_callback();
+    
     if (plot->screen != NULL) {
 
 
@@ -450,15 +454,10 @@ void Plot::draw_points(
         plot_params *params) {
     Coordinate_item* tmp = params->coordinate_list;
 
-    // float scale_x_num =  params->plot_position.w / (params->max.x / params->scale.x);
-    // float scale_y_num =  params->plot_position.h / (params->max.y / params->scale.y);
-    float scale_x_num = params->plot_position.w / ((params->max.x - params->min.x) / params->scale.x);
-    float scale_y_num = params->plot_position.h / ((params->max.y - params->min.y) / params->scale.y);
-
     unsigned char isFirst = 1;
 
-    float previous_x = 0;
-    float previous_y = 0;
+    double previous_x = 0;
+    double previous_y = 0;
 
 
       
@@ -472,8 +471,8 @@ void Plot::draw_points(
             caption_item->caption_id = tmp->caption_id ;
         }
         {
-            float circle_x1 = params->plot_position.x + ((tmp->x - params->min.x) / params->scale.x) * scale_x_num;
-            float circle_y1 = params->plot_position.y + params->plot_position.h - ((tmp->y - params->min.y) / params->scale.y) * scale_y_num;
+            double circle_x1 = params->plot_position.x +                           ((tmp->x - params->min.x) / (params->max.x - params->min.x)) * (params->plot_position.w );
+            double circle_y1 = params->plot_position.y + params->plot_position.h - ((tmp->y - params->min.y) / (params->max.y - params->min.y)) *  (params->plot_position.h);
 
         //    myPrintf("(%f , %f)",circle_x1, circle_y1 );
            // SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -537,16 +536,16 @@ void Plot::draw_scale_graduation(SDL_Renderer * renderer,
         splot *plot,
         SDL_Color font_color) {
 
-    double scale_x_num = params->plot_position.w / ((params->max.x - params->min.x) / params->scale.x);
-    double scale_y_num = params->plot_position.h / ((params->max.y - params->min.y) / params->scale.y);
-
     double init_pos_x = params->plot_position.x;
     double init_pos_y = params->plot_position.y + params->plot_position.h;
 
     double current_scale = params->min.x;
+    
+    double delXFact =  ((params->max.x - params->min.x)/(double)params->vertCell);
+    double delYFact =  ((params->max.y - params->min.y)/(double)params->horzCell);
 
-    double max_point_number_x = (params->max.x / params->scale.x);
-    double min_point_number_x = (params->min.x / params->scale.x);
+    double max_point_number_x = (params->max.x /delXFact );
+    double min_point_number_x = (params->min.x / delXFact);
 
     //int i = 0;
 
@@ -565,11 +564,12 @@ void Plot::draw_scale_graduation(SDL_Renderer * renderer,
         }
 
         char text[10];
-        if( params->max.x - params->min.x < 5.0)
-        sprintf(text, "%.2f", current_scale);
+        if (params->X_FP == 2)
+            sprintf(text, "%.2f", current_scale);
+        else if (params->X_FP == 1)
+            sprintf(text, "%.1f", current_scale);
         else
-         sprintf(text, "%d", (int)current_scale);
-        
+            sprintf(text, "%.0f", current_scale);
 
         //        SDL_Surface *caption_text_surface = TTF_RenderText_Blended(font, text, font_color);
         SDL_Rect caption_text;
@@ -585,16 +585,17 @@ void Plot::draw_scale_graduation(SDL_Renderer * renderer,
 
         // *surface_list = push_back_surface(*surface_list, caption_text_surface);
 
-        init_pos_x += scale_x_num;
-        current_scale += params->scale.x;
+                
+        init_pos_x += (params->plot_position.w / (double)params->vertCell); 
+        current_scale += delXFact;
 
         regular_caption_text_heigth = caption_text.h;
     }
 
     current_scale = params->min.y;
 
-    double max_point_number_y = (params->max.y / params->scale.y);
-    double min_point_number_y = (params->min.y / params->scale.y);
+    double max_point_number_y = (params->max.y / delYFact);
+    double min_point_number_y = (params->min.y / delYFact);
 
     init_pos_x = params->plot_position.x;
     init_pos_y = params->plot_position.y + params->plot_position.h;
@@ -610,11 +611,14 @@ void Plot::draw_scale_graduation(SDL_Renderer * renderer,
                 SDL_RenderDrawLine(renderer, init_pos_x, init_pos_y, init_pos_x + params->plot_position.w, init_pos_y);
         }
 
+  
         char text[10];
-        if( params->max.y - params->min.y < 5.0)
-        sprintf(text, "%.2f", current_scale);
+        if (params->Y_FP == 2)
+            sprintf(text, "%.2f", current_scale);
+        else if (params->Y_FP == 1)
+            sprintf(text, "%.1f", current_scale);
         else
-         sprintf(text, "%d", (int)current_scale);
+            sprintf(text, "%.0f", current_scale);
         
 
         //        SDL_Surface *caption_text_surface = TTF_RenderText_Blended(font, text, font_color);
@@ -632,10 +636,11 @@ void Plot::draw_scale_graduation(SDL_Renderer * renderer,
         SDL_DrawString(renderer, caption_text.x, caption_text.y, text, 8, &font_color);
 
         //        *surface_list = push_back_surface(*surface_list, caption_text_surface);
+        
 
-        init_pos_y -= scale_y_num;
+        init_pos_y -=  (params->plot_position.h /(double) params->horzCell);
 
-        current_scale += params->scale.y;
+        current_scale += delYFact;
 
 //        regular_caption_text_width = FONT_CHARACTER_SIZE + 2;
     }

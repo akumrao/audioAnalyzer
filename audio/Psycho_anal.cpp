@@ -59,7 +59,7 @@ Psycho_anal::Psycho_anal(double sfreq):plotwin_list(NULL) {
         window_s[i] = 0.5 * (1 - cos(2.0 * PI * (i - 0.5) / BLKSIZE_s));
     
     
-    /*
+  /*
     {
     
         captionlist caption_list = NULL;
@@ -72,13 +72,13 @@ Psycho_anal::Psycho_anal(double sfreq):plotwin_list(NULL) {
 
         // params->push_back( 0, window, BLKSIZE);
     
-        plot_params *params = new plot_params("Time (s)", "Speed (Mbit/s)", caption_list, coordinate_list, 400, 400);
+        plot_params *params = new plot_params("Time (s)", "Speed (Mbit/s)", caption_list, coordinate_list, 800, 800);
     
         //  Plot_Window_params win_param;
         plotwin_list = push_back_plot_win(plotwin_list, params); 
     
-    }
-*/
+    }*/
+
     /* reset states used in unpredictability measure */
     for (i = 0; i < 2; i++)
         for (j = 0; j < 2; j++)
@@ -92,14 +92,14 @@ Psycho_anal::Psycho_anal(double sfreq):plotwin_list(NULL) {
             partition_s, qthr_s, norm_s, SNR_s,
             cbw_l, bu_l, bo_l, w1_l, w2_l, cbw_s, bu_s, bo_s, w1_s, w2_s);
     
-   /*  
+  
     {
         captionlist caption_list = NULL;
         coordlist coordinate_list = NULL;
         caption_list = push_back_caption(caption_list, "Function of MinVal", 0, 0x0000FF);
         coordinate_list = push_back_coords(coordinate_list, 0, minval, 62 );
         plot_params *params = new plot_params( "partition", "SNR", caption_list, coordinate_list, 400, 400);
-        plotwin_list = push_back_plot_win(plotwin_list, params); 
+        push_back_plot_win( params); 
     }
             
       
@@ -109,7 +109,7 @@ Psycho_anal::Psycho_anal(double sfreq):plotwin_list(NULL) {
         caption_list = push_back_caption(caption_list, "Threshold of Quite", 0, 0x0000FF);
         coordinate_list = push_back_coords(coordinate_list, 0, qthr_l, 62 );
         plot_params *params = new plot_params( "partition", "qthr_l", caption_list, coordinate_list, 400, 400);
-        plotwin_list = push_back_plot_win(plotwin_list, params); 
+        push_back_plot_win( params); 
     }
  
      {
@@ -124,9 +124,9 @@ Psycho_anal::Psycho_anal(double sfreq):plotwin_list(NULL) {
       
         
         plot_params *params = new plot_params( "partition", "SpreadingFn", caption_list, coordinate_list, 800, 400);
-        plotwin_list = push_back_plot_win(plotwin_list, params); 
+        push_back_plot_win(params); 
     }
-   */ 
+  
     
     {
         captionlist caption_list = NULL;
@@ -140,7 +140,7 @@ Psycho_anal::Psycho_anal(double sfreq):plotwin_list(NULL) {
       
         
         plot_params *params = new plot_params( "partition", "norm_l", caption_list, coordinate_list, 800, 400);
-        plotwin_list = push_back_plot_win(plotwin_list, params); 
+        push_back_plot_win(params); 
     }
 
     /* Set unpredicatiblility of remaining spectral lines to 0.4 */

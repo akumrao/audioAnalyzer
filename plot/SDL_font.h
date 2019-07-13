@@ -11,6 +11,9 @@
 
 #define FONT_CHARACTER_SIZE  8
 
+
+
+
 /**
  *  \brief Draw a string in the currently set font.
  *
@@ -213,7 +216,7 @@ typedef struct Plot_params_struct {
     captionlist caption_list;
     coordlist coordinate_list;
     SDL_Texture *texTarget;
-    Pair scale;
+   // Pair scale;
     Pair max;
     Pair min;
     bool dot;
@@ -223,9 +226,11 @@ typedef struct Plot_params_struct {
     SDL_Rect plot_position;
     std::map< int, std::vector< SDL_Point > > points;
     
-    float scale_x_num ;
-    float scale_y_num ;
+    int horzCell ;
+    int vertCell ;
     
+    int Y_FP;
+    int X_FP;
     int colPos;
     int rowPos;
     
@@ -256,44 +261,100 @@ typedef struct Plot_params_struct {
           
          }
         
+    }
+    void push_back( int id,  double *points, int size)
+    {
+         
+         for(int i=0; i < size ; ++i)
+         {
+         
+           push_back( id, i, points[i]);
+          
+         }
+        
     }   
     void push_back( int id, float x, float y)
     {
+        if( !max.x || !max.y )
+        {
+            printf("Please pass min, max , scale values to plot construct\n");
+           // throw();
+            exit(0);
+        }  
         
-        int _x1 = colPos +plot_position.x + ((x - min.x) / scale.x) * scale_x_num;
-        int _y1 = rowPos +plot_position.y + plot_position.h - ((y - min.y) / scale.y) * scale_y_num;
-
-        myPrintf("(%d , %d)", _x1 , _y1 );
+        int _x1 = colPos +plot_position.x +                   ((x - min.x) / (max.x - min.x)) * (plot_position.w );
+        int _y1 = rowPos +plot_position.y + plot_position.h - ((y - min.y) / (max.y - min.y)) * (plot_position.h);
+       // myPrintf("(%d , %d)", _x1 , _y1 );
         
         points[id].push_back( { _x1 , _y1 } );
     }
 
-    Plot_params_struct(const char * caption_x, const char * caption_y, captionlist caption_lst, coordlist coordinate_lst, int w=400, int h=400, Pair lscale={0,0}, Pair lmax={0,0}, Pair lmin={0,0} ) : update(true),texTarget(NULL), screen_width(w), screen_heigth(h), scale(lscale), max(lmax), min(lmin), scale_x_num(0), scale_y_num(0), colPos(0),rowPos(0) {
+    Plot_params_struct(const char * caption_x, const char * caption_y, captionlist caption_lst, coordlist coordinate_lst, int w=400, int h=400, Pair lmax={0,0}, Pair lmin={0,0} ) : update(true),texTarget(NULL), screen_width(w), screen_heigth(h), max(lmax), min(lmin), colPos(0),rowPos(0) {
 
-        dot = false;
+        dot = true;
         grid= true;
-
+ 
         caption_text_x = caption_x;
         caption_text_y = caption_y;
         caption_list = caption_lst;
         coordinate_list = coordinate_lst;
        
+        horzCell= 8 ;
+        vertCell= 8 ;
+        
+        Y_FP = 0;
+        X_FP = 0;
         
         if(coordinate_lst && max.x ==0)
         {
             max = coordinate_lst->max();
             min = coordinate_lst->min();
             
-            scale.x = (max.x - min.x)/8;
-            scale.y = (max.y - min.y)/8;        
-            
-            // scale TOB 
-        }
-       
+         }
         
-        float plot_width = screen_width * 0.8;
-        float plot_heigth = screen_heigth * 0.8;
-        float plot_caption_heigth = screen_heigth * 0.05;
+        if( max.x - min.x > 8)
+        {
+            int x;
+            for( x = 0; x < 4 ; ++x)
+            {
+                if( int( max.x - min.x) % vertCell == 0 )
+                    break;
+                 
+                ++vertCell;
+            }
+            if( x == 4)
+                X_FP = 1;
+   
+        }else
+        {
+            X_FP = 2;
+        }
+        
+        if( max.y - min.y > 8)
+        {
+             int x;
+            for( x = 0; x < 4 ; ++x)
+            {
+                if( int( max.y - min.y) % horzCell == 0 )
+                    break;
+                 
+                ++horzCell;
+            }
+            if( x == 4)
+                Y_FP = 1;
+   
+        }
+        else
+        {
+            Y_FP = 2;
+        }
+        
+        
+        
+        
+        double plot_width = screen_width * 0.8;
+        double plot_heigth = screen_heigth * 0.8;
+        double plot_caption_heigth = screen_heigth * 0.05;
  
    
         plot_position.x = (screen_width / 2)-(plot_width * 0.47);
@@ -306,10 +367,7 @@ typedef struct Plot_params_struct {
         plot_caption_position.w = plot_width;
         plot_caption_position.h = plot_caption_heigth;
       
-         if(!scale_x_num)
-        scale_x_num = plot_position.w / ((max.x - min.x) / scale.x);
-        if(!scale_y_num)
-        scale_y_num = plot_position.h / ((max.y - min.y) / scale.y);
+ 
     }
         
 } plot_params;
@@ -343,12 +401,30 @@ typedef Plot_Window_params* plotwinlist;
 
 
 //----------------------------------------
+
 template <typename T>
 coordlist push_back_coords(coordlist list, int caption_id, T *points, int size) {
 
-    for (int i = 0; i < size; ++i) {
 
-        list = push_back_coord(list, caption_id, i, points[i]);
+    coordlist last = list;
+
+    for (int i = 0; i < size; ++i) {
+        Coordinate_item* coord_new_item = (Coordinate_item*) malloc(sizeof (Coordinate_item));
+        coord_new_item->x = i;
+        coord_new_item->y = points[i];
+        coord_new_item->caption_id = caption_id;
+        coord_new_item->nxt = NULL;
+
+          if (last != NULL) {
+
+            last->nxt = coord_new_item;
+            last = coord_new_item;
+
+        } else {
+            last = coord_new_item;
+            list = coord_new_item;
+        }
+
 
     }
     
@@ -432,7 +508,7 @@ captionlist clear_caption(captionlist list);
 
 
 
-plotwinlist push_back_plot_win(plotwinlist list, plot_params* plotparm);
+void push_back_plot_win( plot_params* plotparm);
 
 plotwinlist clear_plot_win(plotwinlist list);
 

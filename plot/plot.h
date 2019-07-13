@@ -16,6 +16,8 @@
 
 #include "SDL_font.h"
 
+#include <functional>
+
 //////////////////////////////////////////////////////////////////////////////////
 
 
@@ -51,11 +53,13 @@ public:
 
     Plot();
 
-    int plot_graph(Plot_Window_params *params, const char *title);
+    int plot_graph( const char *title);
 
     static void mainloop(void *arg);
 
-     static int run(void *arg);
+    static int run(void *arg);
+
+    std::function<void(void)> f_callback;
 
     /**
      * @brief draw_scale_graduation

@@ -2,7 +2,7 @@
 /** @file AudioFile.cpp
  *  @author Arvind Umrao
  *  @copyright Copyright (C) 2019  Arvind Umrao
-*/
+ */
 /*
 https://www.ee.iitb.ac.in/student/~daplab/resources/wav_read_write.cpp
 https://github.com/dilawar/sound/blob/master/src/wav-file.cc
@@ -12,7 +12,7 @@ https://superuser.com/questions/597227/linux-arecord-capture-sound-card-output-r
 //graph
 https://dilawarnotes.wordpress.com/2010/10/15/opening-wav-file-using-cc/
 https://carthick.wordpress.com/2007/11/26/linux-recording-soundcard-output-using-arecord/
-*/
+ */
 #include "AudioFile.h"
 #include <fstream>
 #include <unordered_map>
@@ -25,7 +25,7 @@ https://carthick.wordpress.com/2007/11/26/linux-recording-soundcard-output-using
 #include <sys/stat.h> 
 #include <sys/types.h> 
 #include <unistd.h> 
-
+#include <numeric> // std::iota 
 
 
 //=============================================================
@@ -74,7 +74,7 @@ std::unordered_map <uint32_t, std::vector<uint8_t>> aiffSampleRateTable = {
 //=============================================================
 
 template <class T>
-AudioFile<T>::AudioFile() {
+AudioFile<T>::AudioFile()  {
     bitDepth = 16;
     sampleRate = 44100;
     samples.resize(1);
@@ -342,7 +342,7 @@ bool AudioFile<T>::openWave(std::string filePath) {
             }
 
 
-            if (strncmp(subchunk.subchunk2_id, "data",4) == 0) {
+            if (strncmp(subchunk.subchunk2_id, "data", 4) == 0) {
                 break;
             }
 
@@ -358,110 +358,34 @@ bool AudioFile<T>::openWave(std::string filePath) {
 
         /* find length of remaining data. */
         totalSamplesPerChannel = subchunk.subchunk2_size / (nChannels * bitDepth / 8);
-  
+
         return 1;
     }
 
 }
 
 template <class T>
-bool AudioFile<T>::analyzeWave(std::FILE *file, std::string stats, std::string graph) {
+bool AudioFile<T>::analyzeWave() {
 
-    int FrameSampleSize = 1024;
-    int FrameSize = FrameSampleSize * nChannels * bitDepth / 8;
+    static int frameSampleSize = 0;
+    
 
-    std::vector<uint8_t> fileData(FrameSize); // char is trivally copyable
-    
-    bool toFile = false;
-    std::ofstream  outF;
-    
-    mkfifo(graph.c_str(), 0666); 
-   
-    outF.open( graph, std::ofstream::out | std::ofstream::in);
-    
-    
-    toFile = true;
-    
-   // std::vector< float> v = { 2.2, 4.5, 9.9};
-    
-   //outF << time << ','<< samples;
-    //              outF << '\n';
-    //outF.close();
-    
-    T time;
+        coordlist coordinate_list = NULL;
 
-
-    int framecount = 0;
-    int numBytesPerSample = bitDepth / 8;
-    
-    int curPos=std::ftell(file);
-            
-    while (true ) {
+        params1->clean();
+        params1->update = true;
+        coordinate_list = push_back_coords(coordinate_list, 0, &samples[1][0] , 1024);
+        params1->push_back(0,  &samples[1][frameSampleSize] , 1024);
         
-        if( feof(file))
+        
+        frameSampleSize += 1024;
+        if( frameSampleSize > samples[1].size())
         {
-            fseek(file,curPos, SEEK_SET);
+            frameSampleSize =0;
         }
-                
-        std::stringstream ss;
         
-        int nb= std::fread(&fileData[0], sizeof fileData[0], fileData.size(), file);
-        //cout << nb <<endl;
-        framecount++; // Incrementing Number of frames
-        /* Insert your processing code here*/
-        //fwrite(buff16, 1, nb, outfile); // Writing read data into output file
-        clearAudioBuffer();
-        samples.resize(nChannels);
-        
-        for (int i = 0; i < FrameSampleSize; i++) {
-            for (int channel = 0; channel < nChannels; channel++) {
-                int sampleIndex =   ( meta.block_align * i) + channel * numBytesPerSample;
-
-                if (bitDepth == 8) {
-                    T sample = singleByteToSample(fileData[sampleIndex]);
-                    samples[channel].push_back(sample);
-                } else if (bitDepth == 16) {
-                    int16_t sampleAsInt = twoBytesToInt(fileData, sampleIndex);
-                    T sample = sixteenBitIntToSample(sampleAsInt);
-                    samples[channel].push_back(sample);
-                } else if (bitDepth == 24) {
-                    int32_t sampleAsInt = 0;
-                    sampleAsInt = (fileData[sampleIndex + 2] << 16) | (fileData[sampleIndex + 1] << 8) | fileData[sampleIndex];
-
-                    if (sampleAsInt & 0x800000) //  if the 24th bit is set, this is a negative number in 24-bit world
-                        sampleAsInt = sampleAsInt | ~0xFFFFFF; // so make sure sign is extended to the 32 bit float
-
-                    T sample = (T) sampleAsInt / (T) 8388608.;
-                    samples[channel].push_back(sample);
-                } else {
-                    assert(false);
-                }
-                
-            } // channel
-           
-            
-           time = 1.0 * i / sampleRate;
-     
-            if( toFile )
-            {
-                ss << time << "," << samples[0][i] << " " ;
-                //ss << '\n';
-            }
-            else
-            {
-                cout << time << ','<< samples[0][i];
-
-                cout << '\n';
-            }
-   
-        }//for sample 
-        
-        outF <<  ss.rdbuf() << '\n';
-        
-    }// end while file
-    
-      outF.close();
-    return false;
+       
+    return true;
 }
 
 //=============================================================
@@ -492,7 +416,7 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
     std::string formatChunkID(fileData.begin() + f, fileData.begin() + f + 4);
     //int32_t formatChunkSize = fourBytesToInt (fileData, f + 4);
     int16_t audioFormat = twoBytesToInt(fileData, f + 8);
-    int16_t numChannels = twoBytesToInt(fileData, f + 10);
+    nChannels = twoBytesToInt(fileData, f + 10);
     sampleRate = (uint32_t) fourBytesToInt(fileData, f + 12);
     int32_t numBytesPerSecond = fourBytesToInt(fileData, f + 16);
     int16_t numBytesPerBlock = twoBytesToInt(fileData, f + 20);
@@ -507,13 +431,13 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
     }
 
     // check the number of channels is mono or stereo
-    if (numChannels < 1 || numChannels > 2) {
+    if (nChannels < 1 || nChannels > 2) {
         std::cout << "ERROR: this WAV file seems to be neither mono nor stereo (perhaps multi-track, or corrupted?)" << std::endl;
         return false;
     }
 
     // check header data is consistent
-    if ((numBytesPerSecond != (numChannels * sampleRate * bitDepth) / 8) || (numBytesPerBlock != (numChannels * numBytesPerSample))) {
+    if ((numBytesPerSecond != (nChannels * sampleRate * bitDepth) / 8) || (numBytesPerBlock != (nChannels * numBytesPerSample))) {
         std::cout << "ERROR: the header data in this WAV file seems to be inconsistent" << std::endl;
         return false;
     }
@@ -530,14 +454,14 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
     std::string dataChunkID(fileData.begin() + d, fileData.begin() + d + 4);
     int32_t dataChunkSize = fourBytesToInt(fileData, d + 4);
 
-    int numSamples = dataChunkSize / (numChannels * bitDepth / 8);
+    int numSamples = dataChunkSize / (nChannels * bitDepth / 8);
     int samplesStartIndex = indexOfDataChunk + 8;
 
     clearAudioBuffer();
-    samples.resize(numChannels);
+    samples.resize(nChannels);
 
     for (int i = 0; i < numSamples; i++) {
-        for (int channel = 0; channel < numChannels; channel++) {
+        for (int channel = 0; channel < nChannels; channel++) {
             int sampleIndex = samplesStartIndex + (numBytesPerBlock * i) + channel * numBytesPerSample;
 
             if (bitDepth == 8) {
@@ -561,6 +485,32 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
             }
         }
     }
+
+    captionlist caption_list = NULL;
+
+    caption_list = push_back_caption(caption_list, "Sine", 0, 0x0000FF);
+
+    coordlist coordinate_list = NULL;
+    
+    //fill in with range
+   // std::vector<int> v(numSamples) ; // vector with 100 ints.
+   // std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ..., 99
+
+    coordinate_list = push_back_coords(coordinate_list, 0, &samples[1][0] , 1024);
+    //populate plot parameter object
+ //   params1 = new plot_params("Time (s)", "Speed (Mbit/s)", caption_list, coordinate_list, 800, 800,{1, 1}, {10, 10 }, {0, 0});
+    //  params->scale.x = .25;
+    //   params->scale.y = .2;
+    //  Plot_Window_params win_param;
+   // params1->push_back(0, 1, 1);
+  //  params1->push_back(0, 5, 6);
+   // params1->push_back(0, 9, 9);
+    
+   params1 = new plot_params( "x", "y", caption_list, coordinate_list, 800, 800, {1024, 1},{0, -1 });
+    
+    push_back_plot_win(params1);
+
+
 
     return true;
 }
