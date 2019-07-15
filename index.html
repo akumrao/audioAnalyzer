@@ -9,6 +9,9 @@
 
 
 <body>
+    <p> <a href="webrtcdump.html">For RTP analysis, click here</a> </p>
+    <p> <a href="video.html">For video analysis, click here</a> </p>
+
     <form><input id="myFile" type="file" onchange="doImport(event)"></form>
 
     <!-- Create the canvas that the C++ code will draw into -->
@@ -35,7 +38,6 @@ function doImport(evt) {
   reader.onload = function(loadedEvent) {
 
 
-
         var arrayBuffer =  loadedEvent.target.result;
 
         initImage(arrayBuffer);
@@ -49,7 +51,7 @@ function doImport(evt) {
 
 }
 
-  function initImage(rawJpeg) {
+  async function initImage(rawJpeg) {
           // the fetch response is an ArrayBuffer (not typed).
           // We create a typed array from it.
           let rawJpegAsTypedArray = new Uint8Array(rawJpeg);

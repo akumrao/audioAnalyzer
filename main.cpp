@@ -46,17 +46,12 @@ int EMSCRIPTEN_KEEPALIVE setSrcImage(BYTE *jpegData,  unsigned long size)
     //audioFile.printSummary();
     
     
-    plotwinlist plotwin_list = NULL;
 
-   // Psycho_anal psycho_anal(44100);
+    Psycho_anal psycho_anal(44100);
     
    
-  // plotwin_list = psycho_anal.plotwin_list;
-    
-     plotwin_list = audioFile.plotwin_list;
 
-
-   // audioFile.printSummary();
+    audioFile.printSummary();
     
      
      
@@ -65,7 +60,7 @@ int EMSCRIPTEN_KEEPALIVE setSrcImage(BYTE *jpegData,  unsigned long size)
     Plot plot;
     plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
 
-    int ret = plot.plot_graph(plotwin_list, "Plot");
+    int ret = plot.plot_graph("Plot");
 
     if (ret == EXIT_FAILURE) {
         printf("plot_graph return with status %d\n", ret);
@@ -96,7 +91,7 @@ int main(int argc, char* argv[]) {
    
            
 
-    Psycho_anal psycho_anal(44100);
+   // Psycho_anal psycho_anal(44100);
     
    
    // plotwin_list = psycho_anal.plotwin_list;
@@ -233,7 +228,7 @@ int main(int argc, char* argv[]) {
 
     Plot plot;  //std::bind( &Foo::print_add, foo, _1 );
     // using std::placeholders::_1;
-  //  plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
+    plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
 
     int ret = plot.plot_graph("Plot");
 

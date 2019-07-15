@@ -20,7 +20,7 @@
 Psycho_anal::Psycho_anal() {
 }
 
-Psycho_anal::Psycho_anal(double sfreq):plotwin_list(NULL) {
+Psycho_anal::Psycho_anal(double sfreq) {
     unsigned int i, j, k;
 
 
@@ -75,7 +75,7 @@ Psycho_anal::Psycho_anal(double sfreq):plotwin_list(NULL) {
         plot_params *params = new plot_params("Time (s)", "Speed (Mbit/s)", caption_list, coordinate_list, 800, 800);
     
         //  Plot_Window_params win_param;
-        plotwin_list = push_back_plot_win(plotwin_list, params); 
+         push_back_plot_win(params); 
     
     }*/
 

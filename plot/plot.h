@@ -184,10 +184,9 @@ private:
 
     Plot_Window_params *win_params;
 
-    int nWindows;
+   // int nWindows;
 
-    int nHoriz;
-    int nVert;
+  
     
 public:
     volatile static int keepRunning;

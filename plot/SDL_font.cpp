@@ -631,9 +631,31 @@ void push_back_plot_win( plot_params* plotparm) {
         plotwin_list =  plot_win_new_item;
     } else {
         Plot_Window_params* temp = plotwin_list;
+        int highest_heigth = 0;
+        
         while (temp->nxt != NULL) {
+           
+            if( highest_heigth < temp->plotparm->screen_heigth)
+                highest_heigth = temp->plotparm->screen_heigth;
             temp = temp->nxt;
         }
+        
+        if( temp->plotparm->colPos  + plot_win_new_item->plotparm->screen_width <  MaxScreenX)
+        {
+            plot_win_new_item->plotparm->colPos   = temp->plotparm->colPos   + temp->plotparm->screen_width;
+            plot_win_new_item->plotparm->rowPos = temp->plotparm->rowPos  ;
+        }
+        else if( temp->plotparm->rowPos  + plot_win_new_item->plotparm->screen_heigth < MaxScreenY)
+        {
+            plot_win_new_item->plotparm->colPos = 0;
+            plot_win_new_item->plotparm->rowPos  = temp->plotparm->rowPos + highest_heigth;
+        }
+        else
+        {
+            printf( " Could not add more plot window \n ");
+            exit(0);
+        }
+            
         temp->nxt = plot_win_new_item;
 
     }

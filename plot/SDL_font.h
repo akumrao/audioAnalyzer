@@ -10,6 +10,8 @@
 /* Function prototypes */
 
 #define FONT_CHARACTER_SIZE  8
+#define MaxScreenX   1200
+#define MaxScreenY   800
 
 
 
@@ -231,10 +233,11 @@ typedef struct Plot_params_struct {
     
     int Y_FP;
     int X_FP;
+    
     int colPos;
     int rowPos;
     
-     void clean()
+    void clean()
     {
         
          for(auto& kv : points)
@@ -305,11 +308,11 @@ typedef struct Plot_params_struct {
         Y_FP = 0;
         X_FP = 0;
         
+        
         if(coordinate_lst && max.x ==0)
         {
             max = coordinate_lst->max();
             min = coordinate_lst->min();
-            
          }
         
         if( max.x - min.x > 8)

@@ -132,7 +132,6 @@ private:
  F2HBLK *r, *phi_sav;
  
 public:
- plotwinlist plotwin_list;
 };
 
 #endif /* PSYCHO_ANAL_H */

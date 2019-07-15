@@ -205,6 +205,14 @@ private:
     bool writeDataToFile (std::vector<uint8_t>& fileData, std::string filePath);
     
     //=============================================================
+    
+    
+   //=============================================================
+    bool play ();
+    
+    //=============================================================
+    
+    
     AudioFileFormat audioFileFormat;
     uint32_t sampleRate;
     int bitDepth;

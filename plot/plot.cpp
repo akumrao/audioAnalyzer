@@ -49,44 +49,6 @@ void Plot::mainloop(void *arg) {
     
     ctx->draw_window(&ctx->plot, ctx->win_params);
 
-/*
-    static int x = 0;
-    x = ++x % 5;
-
- 
-
-    plot_params *params = ctx->win_params->nxt->plotparm;
-    params->clean();
-    ctx->win_params->plotparm->update = true;
-    params->update = true;
-    params->push_back(0, -5, -2+x);
-    params->push_back(0, -4, -9);
-    params->push_back(0, -3, -9);
-    params->push_back(0, -2, -3);
-    params->push_back(0, -1, -8);
-    params->push_back(0, 0, 0);
-    params->push_back(0, 0, 9);
-    params->push_back(0, 1, 5);
-    params->push_back(0, 2, 12);
-    params->push_back(0, 3, 18);
-    params->push_back(0, 4, 3);
-
-
-    plot_params *params1 = ctx->win_params->nxt->nxt->plotparm;
-    params1->clean();
-    params1->update = true;
-    for (int i = 0; i < 2048; ++i) {
-
-        double sineStep = 2 * M_PI * i * 440 / 44100;
-         double ret;
-        if(x < 4)
-         ret=  x + (120 * sin(sineStep)) + 128;
-        else
-         ret=  x + (120 * cos(sineStep)) + 128;        
-        params1->push_back(0, i, ret);
-    }
-
-    */
     return;
 
 
@@ -99,13 +61,13 @@ void Plot::mainloop(void *arg) {
  * @param params
  *      plot parameters (cf plot_params struct)
  */
-Plot::Plot() : nWindows(0) {
+Plot::Plot()  {
 
     setvbuf(stdout, NULL, _IONBF, 0);
 
     //surfacelist surface_list = NULL;
 
-    if (SDL_Init(SDL_INIT_VIDEO) == -1) {
+    if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO) == -1) {
 
         myPrintf("Error SDL init failure : %s\n", SDL_GetError());
     }
@@ -127,46 +89,20 @@ int Plot::plot_graph( const char *title) {
     }
     
     
-    nWindows = win_params->count();
+
 
     plot_params *params = win_params->plotparm;
     this->win_params = win_params;
 
-    nHoriz = nWindows;
-    nVert = nWindows;
-    switch (nWindows) {
-
-        case 1:
-
-            break;
-
-        case 2:
-            nVert = nVert / 2;
-            break;
-
-        case 3:
-        case 4:
-            nVert = 2;
-            nHoriz = 2;
-            break;
-
-        case 5:
-        case 6:
-            nVert = 2;
-            nHoriz = 3;
-            break;
-
-        default:
-            myPrintf("Error, Plot Screens supported 1 - 8, you you screens %d\n", nWindows);
-            return -1;
-    };
+  
+    
 
 
 
 #ifdef __EMSCRIPTEN__
     //emscripten_cancel_main_loop();
     // SDL_Delay(1500);
-    SDL_CreateWindowAndRenderer(params->screen_width* nHoriz, params->screen_heigth*nVert, 0, &plot.screen, &plot.renderer);
+    SDL_CreateWindowAndRenderer(MaxScreenX, MaxScreenY, 0, &plot.screen, &plot.renderer);
     //------------ background-----------------------
     SDL_SetRenderDrawColor(plot.renderer, 255, 255, 255, 255);
     /* Clear the entire screen to our white color. */
@@ -182,8 +118,8 @@ int Plot::plot_graph( const char *title) {
             title,
             SDL_WINDOWPOS_UNDEFINED,
             SDL_WINDOWPOS_UNDEFINED,
-            params->screen_width* nHoriz,
-            params->screen_heigth*nVert,
+            MaxScreenX,
+            MaxScreenY,
             SDL_WINDOW_SHOWN);
 
     //SDL_SetWindowFullscreen(plot.screen,SDL_WINDOW_FULLSCREEN);
@@ -238,14 +174,14 @@ void Plot::draw_window(splot *plot, Plot_Window_params *win_params) {
         int w;
         int h;
 
-        int row = 0;
-        int col = 0;
+       // int row = 0;
+       // int col = 0;
         int count = 0;
         while (win_params) {
 
             if (win_params->plotparm->update) {
 
-                win_params->plotparm->update = false;
+                win_params->plotparm->update = true;
 
                 w = win_params->plotparm->screen_width;
                 h = win_params->plotparm->screen_heigth;
@@ -271,12 +207,13 @@ void Plot::draw_window(splot *plot, Plot_Window_params *win_params) {
                 //Now render the texture target to our screen, but upside down
                 SDL_SetRenderTarget(plot->renderer, parentTarget);
 
-                SDL_Rect drect = {col*w, row*h, w, h};
+                SDL_Rect drect = {win_params->plotparm->colPos, win_params->plotparm->rowPos, w, h};
                 
-                win_params->plotparm->colPos= col*w;
-                win_params->plotparm->rowPos= row*h;
+               // win_params->plotparm->colPos= col*w;
+               // win_params->plotparm->rowPos= row*h;
         
-                myPrintf(" win=%d, col = %d, row=%d \n", count, col, row);
+                myPrintf(" win=%d, colPos=%d, rowPos=%d \n", count, win_params->plotparm->colPos, win_params->plotparm->rowPos );
+
                 SDL_RenderCopy(plot->renderer, win_params->plotparm->texTarget, &srect, &drect);
                 
 
@@ -284,8 +221,7 @@ void Plot::draw_window(splot *plot, Plot_Window_params *win_params) {
 
             ++count;
 
-            row = (int) (count) / nHoriz;
-            col = count % nHoriz;
+
             for(auto& kv : win_params->plotparm->points)
             {
                 if(kv.second.size())

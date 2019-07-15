@@ -496,7 +496,7 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
    // std::vector<int> v(numSamples) ; // vector with 100 ints.
    // std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ..., 99
 
-    coordinate_list = push_back_coords(coordinate_list, 0, &samples[1][0] , 1024);
+   // coordinate_list = push_back_coords(coordinate_list, 0, &samples[1][0] , 1024);
     //populate plot parameter object
  //   params1 = new plot_params("Time (s)", "Speed (Mbit/s)", caption_list, coordinate_list, 800, 800,{1, 1}, {10, 10 }, {0, 0});
     //  params->scale.x = .25;
@@ -506,11 +506,9 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
   //  params1->push_back(0, 5, 6);
    // params1->push_back(0, 9, 9);
     
-   params1 = new plot_params( "x", "y", caption_list, coordinate_list, 800, 800, {1024, 1},{0, -1 });
+   params1 = new plot_params( "x", "y", caption_list, coordinate_list, 800, 400, {1024, 1},{0, -1 });
     
-    push_back_plot_win(params1);
-
-
+   push_back_plot_win(params1);
 
     return true;
 }
