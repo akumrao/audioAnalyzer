@@ -14,6 +14,8 @@
 #include <string>
 #include "../plot/plot.h"
 
+
+
 //=============================================================
 /** The different types of audio file, plus some other types to 
  * indicate a failure to load a file, or that one hasn't been
@@ -66,6 +68,7 @@ typedef struct
 
 
 
+
 using namespace std;
 //=============================================================
 template <class T>
@@ -75,6 +78,12 @@ public:
     
     //=============================================================
     typedef std::vector<std::vector<T> > AudioBuffer;
+    
+    std::vector<uint8_t> rawPCMInt;
+    std::vector<float> rawPCMFloat;
+    int alradyPlayed;
+     
+     
     
     //=============================================================
     /** Constructor */
@@ -206,23 +215,37 @@ private:
     
     //=============================================================
     
-    
+    public:
    //=============================================================
     bool play ();
     
     //=============================================================
-    
+    private:
     
     AudioFileFormat audioFileFormat;
     uint32_t sampleRate;
     int bitDepth;
     int nChannels;
     int totalSamplesPerChannel;
+     int16_t audioFormat;
     struct header_file  meta;
 
     public:
 
     plot_params *params1; 
+    
+    
+    private:
+    //double v;
+  //  std::queue<BeepObject> beeps;
+public:
+   // void beep(double freq, int duration);
+    void generateSamplesInt(Uint8 *stream, int length);
+    void generateSamplesFloat(Uint8 *stream, int length);
+ //   void wait();
+    static void audio_callback_INT(void *data, Uint8 *stream, int length);
+    static void audio_callback_FLOAT(void *data, Uint8 *stream, int length);
+    
 };
 
 #endif /* AudioFile_h */

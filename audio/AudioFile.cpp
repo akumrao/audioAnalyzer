@@ -4,6 +4,10 @@
  *  @copyright Copyright (C) 2019  Arvind Umrao
  */
 /*
+ *    
+ * error_printf("Unsigned input only supported with bitwidth 8\n");
+ * 8-bit samples are stored as unsigned bytes, ranging from 0 to 255. 16-bit samples are stored as 2's-complement signed integers, ranging from -32768 to 32767.
+ * http://soundfile.sapp.org/doc/WaveFormat/
 https://www.ee.iitb.ac.in/student/~daplab/resources/wav_read_write.cpp
 https://github.com/dilawar/sound/blob/master/src/wav-file.cc
 https://github.com/jwhu1024/pcm-to-wav/blob/master/src/wave.c
@@ -26,6 +30,9 @@ https://carthick.wordpress.com/2007/11/26/linux-recording-soundcard-output-using
 #include <sys/types.h> 
 #include <unistd.h> 
 #include <numeric> // std::iota 
+
+
+ 
 
 
 //=============================================================
@@ -74,7 +81,7 @@ std::unordered_map <uint32_t, std::vector<uint8_t>> aiffSampleRateTable = {
 //=============================================================
 
 template <class T>
-AudioFile<T>::AudioFile()  {
+AudioFile<T>::AudioFile():alradyPlayed(0)  {
     bitDepth = 16;
     sampleRate = 44100;
     samples.resize(1);
@@ -143,6 +150,7 @@ void AudioFile<T>::printSummary() const {
     std::cout << "Num Samples Per Channel: " << getNumSamplesPerChannel() << std::endl;
     std::cout << "Sample Rate: " << sampleRate << std::endl;
     std::cout << "Bit Depth: " << bitDepth << std::endl;
+    std::cout << "Format 1:Int,3:Float" << audioFormat << std::endl;
     std::cout << "Length in Seconds: " << getLengthInSeconds() << std::endl;
     std::cout << "|======================================|" << std::endl;
 }
@@ -288,7 +296,7 @@ bool AudioFile<T>::openWave(std::string filePath) {
 
 
         //int32_t formatChunkSize = fourBytesToInt (fileData, f + 4);
-        int16_t audioFormat = meta.audio_format;
+        audioFormat = meta.audio_format;
         nChannels = meta.num_channels;
         sampleRate = meta.sample_rate;
         int32_t numBytesPerSecond = meta.byte_rate;
@@ -298,7 +306,7 @@ bool AudioFile<T>::openWave(std::string filePath) {
         int numBytesPerSample = bitDepth / 8;
 
         // check that the audio format is PCM
-        if (audioFormat != 1) {
+       if (!(audioFormat == 1 || audioFormat == 3)){
             std::cout << "ERROR: this is a compressed .WAV file and this library does not support decoding them at present" << std::endl;
             return false;
         }
@@ -316,7 +324,7 @@ bool AudioFile<T>::openWave(std::string filePath) {
         }
 
         // check bit depth is either 8, 16 or 24 bit
-        if (bitDepth != 8 && bitDepth != 16 && bitDepth != 24) {
+        if (bitDepth != 8 && bitDepth != 16 && bitDepth != 24 && bitDepth != 32) {
             std::cout << "ERROR: this file has a bit depth that is not 8, 16 or 24 bits" << std::endl;
             return false;
         }
@@ -374,12 +382,12 @@ bool AudioFile<T>::analyzeWave() {
 
         params1->clean();
         params1->update = true;
-        coordinate_list = push_back_coords(coordinate_list, 0, &samples[1][0] , 1024);
-        params1->push_back(0,  &samples[1][frameSampleSize] , 1024);
+        coordinate_list = push_back_coords(coordinate_list, 0, &samples[0][0] , 1024);
+        params1->push_back(0,  &samples[0][frameSampleSize] , 1024);
         
         
         frameSampleSize += 1024;
-        if( frameSampleSize > samples[1].size())
+        if( frameSampleSize > samples[0].size())
         {
             frameSampleSize =0;
         }
@@ -415,7 +423,7 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
     int f = indexOfFormatChunk;
     std::string formatChunkID(fileData.begin() + f, fileData.begin() + f + 4);
     //int32_t formatChunkSize = fourBytesToInt (fileData, f + 4);
-    int16_t audioFormat = twoBytesToInt(fileData, f + 8);
+    audioFormat = twoBytesToInt(fileData, f + 8);
     nChannels = twoBytesToInt(fileData, f + 10);
     sampleRate = (uint32_t) fourBytesToInt(fileData, f + 12);
     int32_t numBytesPerSecond = fourBytesToInt(fileData, f + 16);
@@ -425,7 +433,7 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
     int numBytesPerSample = bitDepth / 8;
 
     // check that the audio format is PCM
-    if (audioFormat != 1) {
+    if (!(audioFormat == 1 || audioFormat == 3)) {
         std::cout << "ERROR: this is a compressed .WAV file and this library does not support decoding them at present" << std::endl;
         return false;
     }
@@ -443,8 +451,8 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
     }
 
     // check bit depth is either 8, 16 or 24 bit
-    if (bitDepth != 8 && bitDepth != 16 && bitDepth != 24) {
-        std::cout << "ERROR: this file has a bit depth that is not 8, 16 or 24 bits" << std::endl;
+    if (bitDepth != 8 && bitDepth != 16 && bitDepth != 24 && bitDepth != 32) {
+        std::cout << "ERROR: this file has a bit depth that is not 8, 16, 24 or 32 bits" << std::endl;
         return false;
     }
 
@@ -459,7 +467,9 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
 
     clearAudioBuffer();
     samples.resize(nChannels);
-
+    rawPCMFloat.clear();
+    rawPCMInt.assign( &fileData[samplesStartIndex],  &fileData[samplesStartIndex +dataChunkSize]);
+            
     for (int i = 0; i < numSamples; i++) {
         for (int channel = 0; channel < nChannels; channel++) {
             int sampleIndex = samplesStartIndex + (numBytesPerBlock * i) + channel * numBytesPerSample;
@@ -480,6 +490,17 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
 
                 T sample = (T) sampleAsInt / (T) 8388608.;
                 samples[channel].push_back(sample);
+            }else if (bitDepth == 32 &&  audioFormat == 3) {
+               float sampleAsFloat = 0;
+                int tmp =  ( (fileData[sampleIndex + 3] << 24) |(fileData[sampleIndex + 2] << 16) | (fileData[sampleIndex + 1] << 8) | fileData[sampleIndex]);
+                float *tmp2 = (float *)&tmp;
+                sampleAsFloat = *tmp2;
+                if( sampleAsFloat > 1)
+                    sampleAsFloat = 1;
+                if(sampleAsFloat < -1)
+                    sampleAsFloat = -1;
+                rawPCMFloat.push_back(sampleAsFloat);
+                samples[channel].push_back(sampleAsFloat);
             } else {
                 assert(false);
             }
@@ -558,8 +579,8 @@ bool AudioFile<T>::decodeAiffFile(std::vector<uint8_t>& fileData) {
     }
 
     // check bit depth is either 8, 16 or 24 bit
-    if (bitDepth != 8 && bitDepth != 16 && bitDepth != 24) {
-        std::cout << "ERROR: this file has a bit depth that is not 8, 16 or 24 bits" << std::endl;
+    if (bitDepth != 8 && bitDepth != 16 && bitDepth != 24 && bitDepth != 32) {
+        std::cout << "ERROR: this file has a bit depth that is not 8, 16, 24 or 32 bits" << std::endl;
         return false;
     }
 
@@ -612,6 +633,172 @@ bool AudioFile<T>::decodeAiffFile(std::vector<uint8_t>& fileData) {
         }
     }
 
+    return true;
+}
+
+const char *SdlAudioFormatToString(int sdlAudioType) {
+  switch(sdlAudioType) {
+  case AUDIO_U8: return "AUDIO_U8";
+  case AUDIO_S8: return "AUDIO_S8";
+  case AUDIO_U16LSB: return "AUDIO_U16LSB";
+  case AUDIO_U16MSB: return "AUDIO_U16MSB";
+  case AUDIO_S16LSB: return "AUDIO_S16LSB";
+  case AUDIO_S16MSB: return "AUDIO_S16MSB";
+  case AUDIO_F32: return "AUDIO_F32";
+  case AUDIO_S32LSB: return "AUDIO_S32LSB";
+  case AUDIO_S32MSB: return "AUDIO_S32MSB";
+  
+  //case AUDIO_F32LSB: return "AUDIO_F32LSB";
+  case AUDIO_F32MSB: return "AUDIO_F32MSB";
+  
+  default: return "(unknown)";
+  }
+}
+
+template <class T>
+bool AudioFile<T>::play() {
+   
+   /*
+       //https://gist.github.com/vl-80/511943db52459890e30501aa0885a793
+    //https://skia.googlesource.com/third_party/sdl/+/refs/heads/master/test/loopwavequeue.c
+    	SDL_AudioSpec wavSpec;
+	Uint32 wavLength;
+	Uint8 *wavBuffer;
+
+	SDL_LoadWAV("/root/Desktop/delete/test.wav", &wavSpec, &wavBuffer, &wavLength);
+	
+	// open audio device
+        
+        wavSpec.freq  = sampleRate;                   
+        wavSpec.format =  bitDepth == 16? AUDIO_S16LSB: AUDIO_S8;     
+        wavSpec.channels = nChannels;            
+        wavSpec.silence;            
+        wavSpec.samples = 0;            
+        wavSpec.padding;            
+        wavSpec.size;               
+  
+
+	SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
+
+        SDL_AudioFormat fmt = wavSpec.format;
+        
+        
+   
+
+        if (SDL_AUDIO_ISFLOAT(fmt)) {
+            printf("floating point data\n");
+        } else {
+            printf("integer data\n");
+        }
+        printf("%d bits per sample\n", (int) SDL_AUDIO_BITSIZE(fmt));
+
+
+	// play audio
+
+	//int success = SDL_QueueAudio(deviceId, wavBuffer, wavLength);
+        int success = SDL_QueueAudio(deviceId, &rawPCM[0], rawPCM.size());
+	SDL_PauseAudioDevice(deviceId, 0);
+
+	// keep window open enough to hear the sound
+
+	//SDL_Delay(3000);
+        
+        sleep( 1000);
+	// clean up
+
+	SDL_CloseAudioDevice(deviceId);
+	//SDL_FreeWAV(wavBuffer);
+        
+    */  
+    
+    
+    SDL_AudioSpec desiredSpec;
+
+    desiredSpec.freq = sampleRate;
+    
+    
+    desiredSpec.channels = nChannels;
+    desiredSpec.samples = 1024;
+    if(  audioFormat == 1 && (   bitDepth == 16  || bitDepth == 8  ))
+    {
+        desiredSpec.format = bitDepth == 16 ? AUDIO_S16LSB: AUDIO_S8;
+        desiredSpec.callback = audio_callback_INT;
+    }
+    else if( audioFormat == 3  && bitDepth == 32  )
+    {
+        
+        desiredSpec.format = AUDIO_F32;
+        desiredSpec.callback = audio_callback_FLOAT;
+     }
+    else
+    {
+        std::cout << "Unsupported format " << "audioFormat" ;
+    }
+    
+  
+    
+    desiredSpec.userdata = this;
+
+    SDL_AudioSpec obtainedSpec;
+
+    // you might want to look for errors here
+    SDL_OpenAudio(&desiredSpec, &obtainedSpec);
+
+    
+    if( desiredSpec.format != obtainedSpec.format )
+    {
+        
+        if ( obtainedSpec.format == AUDIO_S16LSB ||  obtainedSpec.format == AUDIO_S8 ) {
+             desiredSpec.callback = audio_callback_INT;
+             SDL_PauseAudio(1);
+             SDL_CloseAudio();
+             SDL_OpenAudio(&desiredSpec, &obtainedSpec);
+            
+        } else if ( obtainedSpec.format == AUDIO_F32) {
+
+            
+            int len = rawPCMInt.size();
+            rawPCMFloat.clear();
+            for (int sampleIndex = 0; sampleIndex < len/2; sampleIndex = sampleIndex+2) 
+            {
+
+            int16_t sampleAsInt =  (rawPCMInt[sampleIndex + 1] << 8) | rawPCMInt[sampleIndex];
+
+             float const u = sampleAsInt/32768.0;
+
+              rawPCMFloat.push_back(u);
+            }
+              desiredSpec.callback = audio_callback_FLOAT;
+              desiredSpec.format = AUDIO_F32;
+              
+             SDL_PauseAudio(1);
+             SDL_CloseAudio();
+             SDL_OpenAudio(&desiredSpec, &obtainedSpec);
+             
+        } else {
+            std::cout << "Unsupported format " << "audioFormat";
+        }
+
+        
+    }// end if desired format != desired spec
+    
+      printf("obtainedSpec   %d  freq with audio format %s, %d channels, and %d samples buffer.\n",
+       (int)obtainedSpec.freq, SdlAudioFormatToString(obtainedSpec.format), obtainedSpec.channels,  obtainedSpec.samples);
+   
+      
+    // start play audio
+    SDL_PauseAudio(0);
+    
+   /*  int duration = 1000;
+    double Hz = 440;
+     BeepObject bo;
+    bo.freq = Hz;
+    bo.samplesLeft = duration * FREQUENCY / 1000;
+    
+    SDL_LockAudio();
+    beeps.push(bo);
+    SDL_UnlockAudio();
+    */
     return true;
 }
 
@@ -991,6 +1178,64 @@ T AudioFile<T>::clamp(T value, T minValue, T maxValue) {
     value = std::max(value, minValue);
     return value;
 }
+
+
+
+template <class T>
+void AudioFile<T>::generateSamplesInt(Uint8 *stream, int length)
+{
+   
+    if( alradyPlayed + length <  rawPCMInt.size()  )
+    {
+        SDL_memcpy(stream,  &rawPCMInt[alradyPlayed], length); 
+        alradyPlayed = alradyPlayed + length;
+    }else
+    {
+    SDL_PauseAudio(1);
+    SDL_CloseAudio();
+    }
+    
+}
+
+template <class T>
+void AudioFile<T>::generateSamplesFloat(Uint8 *stream, int length)
+{
+   
+    if( alradyPlayed + length/4 <  rawPCMFloat.size()  )
+    {
+       
+        SDL_memcpy(stream,  &rawPCMFloat[alradyPlayed], length); 
+        alradyPlayed = alradyPlayed + length/4;
+    }else
+    {
+        SDL_PauseAudio(1);
+        SDL_CloseAudio();
+    }
+         
+    
+}
+
+
+
+template <class T>
+void AudioFile<T>:: audio_callback_INT(void *data, Uint8 * stream, int length)
+{
+    printf("audio_callback\n"  );
+     AudioFile *sound = reinterpret_cast<AudioFile*>(data);
+     
+      sound->generateSamplesInt(stream, length);
+}
+
+
+
+template <class T>
+void AudioFile<T>:: audio_callback_FLOAT(void *data, Uint8 * stream, int length)
+{
+    printf("audio_callback\n"  );
+    AudioFile *sound = reinterpret_cast<AudioFile*>(data);
+    sound->generateSamplesFloat(stream, length);
+}
+
 
 //===========================================================
 template class AudioFile<float>;

@@ -16,6 +16,10 @@ using namespace std;
 #include "audio/Psycho_anal.h"
 #include <string.h>
 
+
+# include <limits.h>
+typedef float       ieee754_float32_t;
+
 #ifdef __EMSCRIPTEN__
 #include <emscripten/emscripten.h>
 
@@ -47,7 +51,7 @@ int EMSCRIPTEN_KEEPALIVE setSrcImage(BYTE *jpegData,  unsigned long size)
     
     
 
-    Psycho_anal psycho_anal(44100);
+   // Psycho_anal psycho_anal(44100);
     
    
 
@@ -59,6 +63,8 @@ int EMSCRIPTEN_KEEPALIVE setSrcImage(BYTE *jpegData,  unsigned long size)
     
     Plot plot;
     plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
+    
+    audioFile.play();
 
     int ret = plot.plot_graph("Plot");
 
@@ -77,11 +83,133 @@ int EMSCRIPTEN_KEEPALIVE setSrcImage(BYTE *jpegData,  unsigned long size)
 
 }
 #else
+static Uint8 *audio_pos; // global pointer to the audio buffer to be played
+static Uint32 audio_len; // remaining length of the sample we have to play
+// audio callback function
+// here you have to copy the data of your audio buffer into the
+// requesting audio buffer (stream)
+// you should only copy as much as the requested length (len)
+void my_audio_callback(void *userdata, Uint8 *stream, int len) {
+	
+	if (audio_len ==0)
+		return;
+	
+	len = ( len > audio_len ? audio_len : len );
+	SDL_memcpy (stream, audio_pos, len); 					// simply copy from one buffer into the other
+	//SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);// mix from one buffer into another
+          
+        for(int x =0; x < 100; ++x)
+            printf( "%d", stream[x]);
+         printf( "\n");
+
+	audio_pos += len;
+	audio_len -= len;
+}
+
+void my_audio_callback1(void *userdata, Uint8 *stream, int len) {
+
+    if (audio_len  <2)
+        return;
+
+  
+    len = ( len > audio_len ? audio_len : len );
+   
+      for (int sampleIndex = 0; sampleIndex < len/2; sampleIndex = sampleIndex+2) 
+      {
+          
+          int16_t sampleAsInt =  (audio_pos[sampleIndex + 1] << 8) | audio_pos[sampleIndex];
+          
+           ieee754_float32_t const u = sampleAsInt/32768.0;
+           
+        
+          
+            SDL_memcpy(&stream[2*sampleIndex], &u, sizeof(float));
+     }
+
+   
+
+  
+
+    audio_pos += len/2;
+    audio_len -= len/2;
+}
+
+
+const char *SdlAudioFormatToString1(int sdlAudioType) {
+  switch(sdlAudioType) {
+  case AUDIO_U8: return "AUDIO_U8";
+  case AUDIO_S8: return "AUDIO_S8";
+  case AUDIO_U16LSB: return "AUDIO_U16LSB";
+  case AUDIO_U16MSB: return "AUDIO_U16MSB";
+  case AUDIO_S16LSB: return "AUDIO_S16LSB";
+  case AUDIO_S16MSB: return "AUDIO_S16MSB";
+  case AUDIO_F32: return "AUDIO_F32";
+  case AUDIO_S32LSB: return "AUDIO_S32LSB";
+  case AUDIO_S32MSB: return "AUDIO_S32MSB";
+  
+  //case AUDIO_F32LSB: return "AUDIO_F32LSB";
+  case AUDIO_F32MSB: return "AUDIO_F32MSB";
+  
+  default: return "(unknown)";
+  }
+}
 
 int main(int argc, char* argv[]) {
 
    printf("plot_graph\n");
    
+   /*
+   if (SDL_Init(SDL_INIT_AUDIO) < 0)
+			return 1;
+
+	// local variables
+	static Uint32 wav_length; // length of our sample
+	static Uint8 *wav_buffer; // buffer containing our audio file
+	static SDL_AudioSpec wav_spec; // the specs of our piece of music
+	static SDL_AudioSpec des_wav_spec; // the specs of our piece of music
+	
+	
+	// the specs, length and buffer of our wav are filled
+	if( SDL_LoadWAV("/root/Desktop/delete/test.wav", &wav_spec, &wav_buffer, &wav_length) == NULL ){
+	  return 1;
+	}
+	// set the callback function
+	wav_spec.callback = my_audio_callback1;
+	wav_spec.userdata = NULL;
+        wav_spec.format= AUDIO_F32;
+	// set our global static variables
+	audio_pos = wav_buffer; // copy sound buffer
+	audio_len = wav_length; // copy file length
+	wav_spec.samples = 2048;
+
+	if ( SDL_OpenAudio(&wav_spec, &des_wav_spec) < 0 ){
+	  fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
+	  exit(-1);
+	}
+        
+        
+       printf("obtainedSpec   %d  freq with audio format %s, %d channels, and %d samples buffer.\n",
+       (int)wav_spec.freq, SdlAudioFormatToString1(wav_spec.format), wav_spec.channels,  wav_spec.samples);
+        
+       printf("obtainedSpec   %d  freq with audio format %s, %d channels, and %d samples buffer.\n",
+       (int)des_wav_spec.freq, SdlAudioFormatToString1(des_wav_spec.format), des_wav_spec.channels,  des_wav_spec.samples);
+
+	
+
+	SDL_PauseAudio(0);
+
+	// wait until we're don't playing
+	while ( audio_len > 2 ) {
+		SDL_Delay(100); 
+	}
+	
+	// shut everything down
+	SDL_CloseAudio();
+	SDL_FreeWAV(wav_buffer);
+
+        
+        return 0;
+   */
    
    AudioFile<double> audioFile;
 
@@ -229,6 +357,10 @@ int main(int argc, char* argv[]) {
     Plot plot;  //std::bind( &Foo::print_add, foo, _1 );
     // using std::placeholders::_1;
     plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
+    
+    
+    audioFile.printSummary();
+    audioFile.play();
 
     int ret = plot.plot_graph("Plot");
 

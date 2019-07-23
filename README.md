@@ -98,6 +98,17 @@ AudioFile is a template class and so it can be instantiated using floating point
 	AudioFile<double> audioFile;
 	
 
+Tools 
+http://onlinetonegenerator.com/time-stretcher.html
+
+In psychoacoustics, a pure tone is a sound with a sinusoidal waveform; this is, a sine wave of any frequency, phase, and amplitude.[1]
+
+A sine wave is characterized by its frequency (the number of cycles per second), its amplitude (the strength of each cycle), and its phase shift (which indicates the time alignment relative to a zero-time reference point). A pure tone has the property – unique among real-valued wave shapes – that its wave shape is unchanged by linear time-invariant systems; that is, only the phase and amplitude change between such a system's pure-tone input and its output.
+
+Sine and cosine waves can be used as basic building blocks of more complex waves. A pure tone of any frequency and phase can be decomposed into, or built up from, a sine wave and a cosine wave of that frequency. As additional sine waves having different frequencies are combined, the waveform transforms from a sinusoidal shape into a more complex shape.
+
+Sound localization is often more difficult with pure tones than with other sounds.[2
+
 License
 -------
 
