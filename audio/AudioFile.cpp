@@ -1186,7 +1186,7 @@ void AudioFile<T>::generateSamplesInt(Uint8 *stream, int length)
 {
    
     if( alradyPlayed + length <  rawPCMInt.size()  )
-    {
+    {   analyzeWave();
         SDL_memcpy(stream,  &rawPCMInt[alradyPlayed], length); 
         alradyPlayed = alradyPlayed + length;
     }else
@@ -1200,10 +1200,10 @@ void AudioFile<T>::generateSamplesInt(Uint8 *stream, int length)
 template <class T>
 void AudioFile<T>::generateSamplesFloat(Uint8 *stream, int length)
 {
-   
+    
     if( alradyPlayed + length/4 <  rawPCMFloat.size()  )
     {
-       
+        analyzeWave();
         SDL_memcpy(stream,  &rawPCMFloat[alradyPlayed], length); 
         alradyPlayed = alradyPlayed + length/4;
     }else
@@ -1231,6 +1231,8 @@ void AudioFile<T>:: audio_callback_INT(void *data, Uint8 * stream, int length)
 template <class T>
 void AudioFile<T>:: audio_callback_FLOAT(void *data, Uint8 * stream, int length)
 {
+   
+    
     printf("audio_callback\n"  );
     AudioFile *sound = reinterpret_cast<AudioFile*>(data);
     sound->generateSamplesFloat(stream, length);

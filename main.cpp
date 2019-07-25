@@ -62,7 +62,7 @@ int EMSCRIPTEN_KEEPALIVE setSrcImage(BYTE *jpegData,  unsigned long size)
      
     
     Plot plot;
-    plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
+    //plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
     
     audioFile.play();
 
@@ -110,25 +110,16 @@ void my_audio_callback1(void *userdata, Uint8 *stream, int len) {
 
     if (audio_len  <2)
         return;
-
-  
+ 
     len = ( len > audio_len ? audio_len : len );
    
       for (int sampleIndex = 0; sampleIndex < len/2; sampleIndex = sampleIndex+2) 
       {
           
           int16_t sampleAsInt =  (audio_pos[sampleIndex + 1] << 8) | audio_pos[sampleIndex];
-          
            ieee754_float32_t const u = sampleAsInt/32768.0;
-           
-        
-          
-            SDL_memcpy(&stream[2*sampleIndex], &u, sizeof(float));
+           SDL_memcpy(&stream[2*sampleIndex], &u, sizeof(float));
      }
-
-   
-
-  
 
     audio_pos += len/2;
     audio_len -= len/2;
@@ -225,7 +216,7 @@ int main(int argc, char* argv[]) {
    // plotwin_list = psycho_anal.plotwin_list;
 
     
-    bool ret1 = audioFile.load("/root/Desktop/delete/test.wav");
+    bool ret1 = audioFile.load("/root/Desktop/delete/test2.wav");
 
     audioFile.printSummary();
     
@@ -356,7 +347,7 @@ int main(int argc, char* argv[]) {
 
     Plot plot;  //std::bind( &Foo::print_add, foo, _1 );
     // using std::placeholders::_1;
-    plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
+    //plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
     
     
     audioFile.printSummary();
