@@ -375,6 +375,8 @@ bool AudioFile<T>::openWave(std::string filePath) {
 template <class T>
 bool AudioFile<T>::analyzeWave() {
 
+    
+    //work on progeress 
     static int frameSampleSize = 0;
     
 
@@ -718,7 +720,7 @@ bool AudioFile<T>::play() {
     
     
     desiredSpec.channels = nChannels;
-    desiredSpec.samples = 1024;
+    desiredSpec.samples = 1024;  // single channel. Lentght = samplees*nochanges*bitdepth
     if(  audioFormat == 1 && (   bitDepth == 16  || bitDepth == 8  ))
     {
         desiredSpec.format = bitDepth == 16 ? AUDIO_S16LSB: AUDIO_S8;
@@ -745,40 +747,43 @@ bool AudioFile<T>::play() {
     SDL_OpenAudio(&desiredSpec, &obtainedSpec);
 
     
-    if( desiredSpec.format != obtainedSpec.format )
+    if( (desiredSpec.format != obtainedSpec.format)  ||  (desiredSpec.samples  != obtainedSpec.samples  ) )
     {
-        
-        if ( obtainedSpec.format == AUDIO_S16LSB ||  obtainedSpec.format == AUDIO_S8 ) {
-             desiredSpec.callback = audio_callback_INT;
-             SDL_PauseAudio(1);
-             SDL_CloseAudio();
-             SDL_OpenAudio(&desiredSpec, &obtainedSpec);
-            
-        } else if ( obtainedSpec.format == AUDIO_F32) {
+        if((desiredSpec.format != obtainedSpec.format) )
+        {
+            if ( obtainedSpec.format == AUDIO_S16LSB ||  obtainedSpec.format == AUDIO_S8 ) {
+                 desiredSpec.callback = audio_callback_INT;
 
-            
-            int len = rawPCMInt.size();
-            rawPCMFloat.clear();
-            for (int sampleIndex = 0; sampleIndex < len/2; sampleIndex = sampleIndex+2) 
-            {
 
-            int16_t sampleAsInt =  (rawPCMInt[sampleIndex + 1] << 8) | rawPCMInt[sampleIndex];
+            } else if ( obtainedSpec.format == AUDIO_F32) {
 
-             float const u = sampleAsInt/32768.0;
 
-              rawPCMFloat.push_back(u);
+                int len = rawPCMInt.size();
+                rawPCMFloat.clear();
+                for (int sampleIndex = 0; sampleIndex < len/2; sampleIndex = sampleIndex+2) 
+                {
+
+                int16_t sampleAsInt =  (rawPCMInt[sampleIndex + 1] << 8) | rawPCMInt[sampleIndex];
+
+                 float const u = sampleAsInt/32768.0;
+
+                  rawPCMFloat.push_back(u);
+                }
+                  desiredSpec.callback = audio_callback_FLOAT;
+                  desiredSpec.format = AUDIO_F32;
+            } 
+            else {
+                std::cout << "Unsupported format " << "audioFormat";
             }
-              desiredSpec.callback = audio_callback_FLOAT;
-              desiredSpec.format = AUDIO_F32;
-              
-             SDL_PauseAudio(1);
-             SDL_CloseAudio();
-             SDL_OpenAudio(&desiredSpec, &obtainedSpec);
-             
-        } else {
-            std::cout << "Unsupported format " << "audioFormat";
         }
 
+        if (desiredSpec.samples != obtainedSpec.samples) {
+
+            desiredSpec.samples = desiredSpec.samples * desiredSpec.samples / obtainedSpec.samples;
+        }
+        SDL_PauseAudio(1);
+        SDL_CloseAudio();
+        SDL_OpenAudio(&desiredSpec, &obtainedSpec);
         
     }// end if desired format != desired spec
     
@@ -1180,7 +1185,7 @@ T AudioFile<T>::clamp(T value, T minValue, T maxValue) {
 }
 
 
-
+ // single channel. Lentght = samplees*nochanges*bitdepth
 template <class T>
 void AudioFile<T>::generateSamplesInt(Uint8 *stream, int length)
 {
@@ -1196,7 +1201,7 @@ void AudioFile<T>::generateSamplesInt(Uint8 *stream, int length)
     }
     
 }
-
+ // single channel. Lentght = samplees*nochanges*bitdepth
 template <class T>
 void AudioFile<T>::generateSamplesFloat(Uint8 *stream, int length)
 {
@@ -1216,24 +1221,22 @@ void AudioFile<T>::generateSamplesFloat(Uint8 *stream, int length)
 }
 
 
-
+ // single channel. Lentght = samplees*nochanges*bitdepth
 template <class T>
 void AudioFile<T>:: audio_callback_INT(void *data, Uint8 * stream, int length)
 {
-    printf("audio_callback\n"  );
+    printf("audio_callback_INT %d\n",length  );
      AudioFile *sound = reinterpret_cast<AudioFile*>(data);
      
       sound->generateSamplesInt(stream, length);
 }
 
 
-
+ // single channel. Lentght = samplees*nochanges*bitdepth
 template <class T>
 void AudioFile<T>:: audio_callback_FLOAT(void *data, Uint8 * stream, int length)
 {
-   
-    
-    printf("audio_callback\n"  );
+  printf("audio_callback_float %d\n",length  );
     AudioFile *sound = reinterpret_cast<AudioFile*>(data);
     sound->generateSamplesFloat(stream, length);
 }
