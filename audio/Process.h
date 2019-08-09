@@ -15,7 +15,7 @@
 #define PROCESS_H
 
 #include "Common.h"
-
+#include "Psycho_anal.h"
 /* Header Information Structure */
 
 typedef struct {
@@ -52,11 +52,23 @@ typedef struct {
 
 class Process {
 public:
+    
+    
+    typedef std::vector<std::vector<int16_t> > AudioBuffer;
+    
+     typedef std::vector<std::vector<float> > AudioBuffer1;
+     typedef std::vector<std::vector<double> > AudioBuffer2;
+     
+     
     Process();
     Process(const Process& orig);
     virtual ~Process();
     void rebuffer_audio(short buffer[2][1152], short * insamp, unsigned int samples_read, int stereo);
-    unsigned int codecEncodeChunk(int nSamples, short * pSamples, char * pDest);
+    unsigned int codecEncodeChunk(AudioBuffer& newBuffer);
+    unsigned int codecEncodeChunk(AudioBuffer1& newBuffer){};
+    unsigned int codecEncodeChunk(AudioBuffer2& newBuffer){};
+
+    void Init(double sfreq);
 private:
     char * pEncodedOutput;
     int outputBit;
@@ -69,6 +81,10 @@ private:
      float snr32[32];
      III_psy_ratio ratio;
       III_side_info_t l3_side;
+      
+      
+private:
+     Psycho_anal psycho_anal;  
 };
 
 #endif /* PROCESS_H */

@@ -16,11 +16,16 @@
 #include "Fft.h"
 #include "Tables.h"
 #include "SaveJson.h"
+#include <cstring>
 
 Psycho_anal::Psycho_anal() {
 }
 
 Psycho_anal::Psycho_anal(double sfreq) {
+    
+    Init(sfreq);
+}
+void Psycho_anal::Init(double sfreq) {
     unsigned int i, j, k;
 
 
@@ -38,11 +43,71 @@ Psycho_anal::Psycho_anal(double sfreq) {
     /* in the data space.  Each mem_alloc() call here occurs only once at     */
     /* initialization time.  The mem_free() function must not be called.      */
 
+    int z = sizeof (ICB);
+    int x = sizeof (FBLK);
+    
     numlines = (int *) std::malloc(sizeof (ICB));
     window = (float *) std::malloc(sizeof (FBLK));
     r = (F2HBLK *) std::malloc(sizeof (F22HBLK));
     phi_sav = (F2HBLK *) std::malloc(sizeof (F22HBLK));
 
+    
+    
+ /*    double cw[HBLKSIZE], eb[CBANDS];
+ double ctb[CBANDS];
+ double SNR_l[CBANDS], SNR_s[CBANDS_s];
+ double minval[CBANDS], qthr_l[CBANDS], norm_l[CBANDS];
+ double qthr_s[CBANDS_s], norm_s[CBANDS_s];
+ double nb_1[2][CBANDS], nb_2[2][CBANDS];
+ double s3_l[CBANDS][CBANDS];
+
+
+ int cbw_l[SBMAX_l], bu_l[SBMAX_l], bo_l[SBMAX_l];
+ int cbw_s[SBMAX_s], bu_s[SBMAX_s], bo_s[SBMAX_s];
+ double w1_l[SBMAX_l], w2_l[SBMAX_l];
+ double w1_s[SBMAX_s], w2_s[SBMAX_s];
+ double en[SBMAX_l], thm[SBMAX_l];
+ int blocktype_old[2];
+ int partition_l[HBLKSIZE], partition_s[HBLKSIZE_s];
+ */
+
+    std::memset(norm_s, 0, sizeof (norm_s));
+    std::memset(ctb, 0, sizeof (ctb));
+    std::memset(eb, 0, sizeof (eb));
+    std::memset(cbw_l, 0, sizeof (cbw_l));
+
+    std::memset(SNR_l, 0, sizeof (SNR_l));
+    std::memset(SNR_s, 0, sizeof (SNR_s));
+
+    std::memset(minval, 0, sizeof (minval));
+    std::memset(qthr_l, 0, sizeof (qthr_l));
+
+
+    std::memset(norm_l, 0, sizeof (norm_l));
+    std::memset(qthr_s, 0, sizeof (qthr_s));
+
+
+    std::memset(cbw_l, 0, sizeof (cbw_l));
+    std::memset(bu_l, 0, sizeof (bu_l));
+    std::memset(bo_l, 0, sizeof (bo_l));
+    std::memset(bo_s, 0, sizeof (bo_s));
+    std::memset(bu_s, 0, sizeof (bu_s));
+    std::memset(cbw_s, 0, sizeof (cbw_s));
+
+
+    std::memset(w2_l, 0, sizeof (w2_l));
+    std::memset(w1_l, 0, sizeof (w1_l));
+    std::memset(w2_s, 0, sizeof (w2_s));
+    std::memset(w1_s, 0, sizeof (w1_s));
+    std::memset(thm, 0, sizeof (thm));
+    std::memset(en, 0, sizeof (en));
+
+    std::memset(partition_s, 0, sizeof (partition_s));
+
+
+    std::memset(partition_l, 0, sizeof (partition_l));
+    
+            
     sync_flush = 768;
     flush = 576;
     syncsize = 1344; /* sync_flush + flush */
@@ -92,7 +157,21 @@ Psycho_anal::Psycho_anal(double sfreq) {
             partition_s, qthr_s, norm_s, SNR_s,
             cbw_l, bu_l, bo_l, w1_l, w2_l, cbw_s, bu_s, bo_s, w1_s, w2_s);
     
-  
+    
+     {
+        captionlist caption_list = NULL;
+
+        caption_list = push_back_caption(caption_list, "Energy", 0, 0x0000FF);
+
+        coordlist coordinate_list = NULL;
+
+
+        params1 = new plot_params("x", "y", caption_list, coordinate_list, 800, 400,{1024, 10},  {   0, -5 });
+
+        push_back_plot_win(params1);
+    }
+    
+  /*
     {
         captionlist caption_list = NULL;
         coordlist coordinate_list = NULL;
@@ -142,6 +221,7 @@ Psycho_anal::Psycho_anal(double sfreq) {
         plot_params *params = new plot_params( "partition", "norm_l", caption_list, coordinate_list, 800, 400);
         push_back_plot_win(params); 
     }
+    */
 
     /* Set unpredicatiblility of remaining spectral lines to 0.4 */
     for (j = 206; j < HBLKSIZE; j++)
@@ -324,6 +404,7 @@ b
 }
 
 
+
 /*____ psycho_anal() ________________________________________________________*/
 
 void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int chn, int lay, float snr32[32],
@@ -418,6 +499,16 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
 
     fft(wsamp_r, wsamp_i, energy, phi, BLKSIZE); /* long FFT */
 
+    coordlist coordinate_list = NULL;
+    params1->clean();
+    params1->update = true;
+    coordinate_list = push_back_coords(coordinate_list, 0, &energy[0] , 1024);
+    
+    Pair max = coordinate_list->max();
+    Pair min = coordinate_list->min();
+    
+    params1->push_back(0,  &energy[0], 1024);
+    
     for (j = 0; j < 6; j++)
     { /* calculate unpredictability measure cw */
         double r1, phi1;

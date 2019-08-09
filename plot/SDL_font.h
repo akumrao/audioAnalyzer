@@ -265,6 +265,17 @@ typedef struct Plot_params_struct {
          }
         
     }
+    void push_back( int id,  short int *points, int size)
+    {
+         
+         for(int i=0; i < size ; ++i)
+         {
+         
+           push_back( id, i, points[i]);
+          
+         }
+        
+    }
     void push_back( int id,  double *points, int size)
     {
          

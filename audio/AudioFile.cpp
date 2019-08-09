@@ -376,23 +376,23 @@ template <class T>
 bool AudioFile<T>::analyzeWave() {
 
     
-    //work on progeress 
+ 
     static int frameSampleSize = 0;
-    
+    process.codecEncodeChunk(rawPCMint16);
 
-        coordlist coordinate_list = NULL;
+    coordlist coordinate_list = NULL;
 
-        params1->clean();
-        params1->update = true;
-        coordinate_list = push_back_coords(coordinate_list, 0, &samples[0][0] , 1024);
-        params1->push_back(0,  &samples[0][frameSampleSize] , 1024);
-        
-        
-        frameSampleSize += 1024;
-        if( frameSampleSize > samples[0].size())
-        {
-            frameSampleSize =0;
-        }
+    params1->clean();
+    params1->update = true;
+    coordinate_list = push_back_coords(coordinate_list, 0, &samples[0][0] , 1024);
+    params1->push_back(0,  &samples[0][frameSampleSize] , 1024);
+
+
+    frameSampleSize += 1024;
+    if( frameSampleSize > samples[0].size())
+    {
+        frameSampleSize =0;
+    }
         
        
     return true;
@@ -469,6 +469,11 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
 
     clearAudioBuffer();
     samples.resize(nChannels);
+    
+    rawPCMint16.clear();
+    rawPCMint16.resize(nChannels);
+   
+    
     rawPCMFloat.clear();
     rawPCMInt.assign( &fileData[samplesStartIndex],  &fileData[samplesStartIndex +dataChunkSize]);
             
@@ -479,10 +484,20 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
             if (bitDepth == 8) {
                 T sample = singleByteToSample(fileData[sampleIndex]);
                 samples[channel].push_back(sample);
+               // int16_t &dd =  (int16_t &)(fileData[sampleIndex]);
+              //  uint8_t tmp  = fileData[sampleIndex];
+              //   int16_t *tmp2 = (int16_t *)&tmp;
+               //   int16_t tmp3 = *tmp2;
+                int16_t sample16 = (int16_t) (fileData[sampleIndex] - 0x80) << 8;
+
+                 
+                rawPCMint16[channel].push_back(sample16);
             } else if (bitDepth == 16) {
                 int16_t sampleAsInt = twoBytesToInt(fileData, sampleIndex);
                 T sample = sixteenBitIntToSample(sampleAsInt);
                 samples[channel].push_back(sample);
+                rawPCMint16[channel].push_back(sampleAsInt);
+                
             } else if (bitDepth == 24) {
                 int32_t sampleAsInt = 0;
                 sampleAsInt = (fileData[sampleIndex + 2] << 16) | (fileData[sampleIndex + 1] << 8) | fileData[sampleIndex];
@@ -774,6 +789,7 @@ bool AudioFile<T>::play() {
             } 
             else {
                 std::cout << "Unsupported format " << "audioFormat";
+                exit(0);
             }
         }
 
@@ -787,7 +803,8 @@ bool AudioFile<T>::play() {
         
     }// end if desired format != desired spec
     
-      printf("obtainedSpec   %d  freq with audio format %s, %d channels, and %d samples buffer.\n",
+    process.Init(obtainedSpec.freq);
+    printf("obtainedSpec   %d  freq with audio format %s, %d channels, and %d samples buffer.\n",
        (int)obtainedSpec.freq, SdlAudioFormatToString(obtainedSpec.format), obtainedSpec.channels,  obtainedSpec.samples);
    
       
@@ -1172,7 +1189,7 @@ uint8_t AudioFile<T>::sampleToSingleByte(T sample) {
 
 template <class T>
 T AudioFile<T>::singleByteToSample(uint8_t sample) {
-    return static_cast<T> (sample - 128) / static_cast<T> (128.);
+       return static_cast<T> (sample - 128) / static_cast<T> (128.);
 }
 
 //=============================================================
@@ -1245,3 +1262,4 @@ void AudioFile<T>:: audio_callback_FLOAT(void *data, Uint8 * stream, int length)
 //===========================================================
 template class AudioFile<float>;
 template class AudioFile<double>;
+template class AudioFile<short int>;

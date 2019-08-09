@@ -14,6 +14,7 @@
 #include <string>
 #include "../plot/plot.h"
 
+#include "Process.h"
 
 
 //=============================================================
@@ -81,6 +82,7 @@ public:
     
     std::vector<uint8_t> rawPCMInt;
     std::vector<float> rawPCMFloat;
+    std::vector<std::vector<int16_t> >rawPCMint16;
     int alradyPlayed;
      
      
@@ -236,8 +238,8 @@ private:
     
     
     private:
-    //double v;
-  //  std::queue<BeepObject> beeps;
+
+    Process process;  
 public:
    // void beep(double freq, int duration);
     void generateSamplesInt(Uint8 *stream, int length);

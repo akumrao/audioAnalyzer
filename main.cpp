@@ -13,7 +13,7 @@
 #include "audio/AudioFile.h"
 using namespace std;
 #include <fstream>
-#include "audio/Psycho_anal.h"
+
 #include <string.h>
 
 
@@ -89,37 +89,36 @@ static Uint32 audio_len; // remaining length of the sample we have to play
 // here you have to copy the data of your audio buffer into the
 // requesting audio buffer (stream)
 // you should only copy as much as the requested length (len)
-void my_audio_callback(void *userdata, Uint8 *stream, int len) {
-	
-	if (audio_len ==0)
-		return;
-	
-	len = ( len > audio_len ? audio_len : len );
-	SDL_memcpy (stream, audio_pos, len); 					// simply copy from one buffer into the other
-	//SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);// mix from one buffer into another
-          
-        for(int x =0; x < 100; ++x)
-            printf( "%d", stream[x]);
-         printf( "\n");
 
-	audio_pos += len;
-	audio_len -= len;
+void my_audio_callback(void *userdata, Uint8 *stream, int len) {
+
+    if (audio_len == 0)
+        return;
+
+    len = (len > audio_len ? audio_len : len);
+    SDL_memcpy(stream, audio_pos, len); // simply copy from one buffer into the other
+    //SDL_MixAudio(stream, audio_pos, len, SDL_MIX_MAXVOLUME);// mix from one buffer into another
+
+    //for (int x = 0; x < 100; ++x)
+    //    printf("%d", stream[x]);
+    //printf("\n");
+
+    audio_pos += len;
+    audio_len -= len;
 }
 
 void my_audio_callback1(void *userdata, Uint8 *stream, int len) {
 
     if (audio_len  <2)
         return;
- 
+    
     len = ( len > audio_len ? audio_len : len );
-   
-      for (int sampleIndex = 0; sampleIndex < len/2; sampleIndex = sampleIndex+2) 
-      {
-          
-          int16_t sampleAsInt =  (audio_pos[sampleIndex + 1] << 8) | audio_pos[sampleIndex];
-           ieee754_float32_t const u = sampleAsInt/32768.0;
-           SDL_memcpy(&stream[2*sampleIndex], &u, sizeof(float));
-     }
+
+    for (int sampleIndex = 0; sampleIndex < len / 2; sampleIndex = sampleIndex + 2) {
+        int16_t sampleAsInt = (audio_pos[sampleIndex + 1] << 8) | audio_pos[sampleIndex];
+        ieee754_float32_t const u = sampleAsInt / 32768.0;
+        SDL_memcpy(&stream[2 * sampleIndex], &u, sizeof (float));
+    }
 
     audio_pos += len/2;
     audio_len -= len/2;
@@ -202,7 +201,7 @@ int main(int argc, char* argv[]) {
         return 0;
    */
    
-   AudioFile<double> audioFile;
+   AudioFile<float> audioFile;
 
     
    
@@ -215,8 +214,9 @@ int main(int argc, char* argv[]) {
    
    // plotwin_list = psycho_anal.plotwin_list;
 
-    
-    bool ret1 = audioFile.load("/root/Desktop/delete/test2.wav");
+   
+   // bool ret1 = audioFile.load("/root/Desktop/delete/test2.wav");
+    bool ret1 = audioFile.load("./outputs16.wav");
 
     audioFile.printSummary();
     

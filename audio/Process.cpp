@@ -22,6 +22,10 @@ Process::Process(const Process& orig) {
 Process::~Process() {
 }
 
+void Process::Init(double sfreq) {
+    
+    psycho_anal.Init(sfreq);
+}
 void Process::rebuffer_audio(short buffer[2][1152], short * insamp, unsigned int samples_read, int stereo){
     unsigned int j;
 
@@ -52,7 +56,7 @@ void Process::rebuffer_audio(short buffer[2][1152], short * insamp, unsigned int
 }
 
 
-unsigned int Process::codecEncodeChunk(int nSamples, short * pSamples, char * pDest){
+unsigned int Process::codecEncodeChunk( AudioBuffer& newBuffer){
 
     static double xr[2][2][576];
     static double xr_dec[2][2][576];
@@ -64,11 +68,13 @@ unsigned int Process::codecEncodeChunk(int nSamples, short * pSamples, char * pD
     int bitsPerFrame;
     int j;
     
-    pEncodedOutput = pDest;
+    stereo = newBuffer.size();
+    
+   // pEncodedOutput = pDest;
     outputBit = 8;
-    pEncodedOutput[0] = 0;
+   // pEncodedOutput[0] = 0;
 
-    rebuffer_audio(buffer, pSamples, nSamples, stereo);
+   // rebuffer_audio(buffer, pSamples, nSamples, stereo);
 
     if (frac_SpF != 0)
     {
@@ -101,16 +107,19 @@ unsigned int Process::codecEncodeChunk(int nSamples, short * pSamples, char * pD
         sideinfo_len += 16;
     mean_bits = (bitsPerFrame - sideinfo_len) / 2;
 
+    static int inc =0 ;
+
     /*		psychoacoustic model */
 
     for (gr = 0; gr < 2; gr++)
         for (ch = 0; ch < stereo; ch++)
         {
-            //psycho_anal(&buffer[ch][gr * 576], &sam[ch][0], ch, 3, snr32, &ratio.l[gr][ch][0],
-             //       &ratio.s[gr][ch][0], &pe[gr][ch], &l3_side.gr[gr].ch[ch].tt);
+            psycho_anal.psycho_anal(&newBuffer[ch][gr * 576], &sam[ch][0], ch, 3, snr32, &ratio.l[gr][ch][0],
+                   &ratio.s[gr][ch][0], &pe[gr][ch], &l3_side.gr[gr].ch[ch].tt);
 
         }
 
-    
+   if( inc + 1152 < newBuffer.size() ) 
+       inc = inc + 1152;
  return 0;   
 }

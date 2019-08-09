@@ -70,6 +70,7 @@ public:
     Psycho_anal(double sfreq);
     
     Psycho_anal(const Psycho_anal& orig);
+    void Init(double sfreq);
     virtual ~Psycho_anal();
     
     void psycho_anal( short int *buffer, short int savebuf[1344], int chn, int lay, float snr32[32],
@@ -132,6 +133,8 @@ private:
  F2HBLK *r, *phi_sav;
  
 public:
+    
+    plot_params *params1; 
 };
 
 #endif /* PSYCHO_ANAL_H */
