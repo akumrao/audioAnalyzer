@@ -158,19 +158,20 @@ void Psycho_anal::Init(double sfreq) {
             cbw_l, bu_l, bo_l, w1_l, w2_l, cbw_s, bu_s, bo_s, w1_s, w2_s);
     
     
-     {
+    {
         captionlist caption_list = NULL;
-
         caption_list = push_back_caption(caption_list, "Energy", 0, 0x0000FF);
-
-        coordlist coordinate_list = NULL;
-
-
-        params1 = new plot_params("x", "y", caption_list, coordinate_list, 800, 400,{1024, 10},  {   0, -5 });
-
+        params1 = new plot_params("x", "y", caption_list, NULL, 800, 400,{512, 3.40282e+5 },  { 0  , -47169964 });
         push_back_plot_win(params1);
     }
     
+            
+    {
+        captionlist caption_list = NULL;
+        caption_list = push_back_caption(caption_list, "Uncertinity", 0, 0x0000FF);
+        params2 = new plot_params("x", "y", caption_list, NULL, 800, 400,{512, 10},  {   0, -5 });
+        push_back_plot_win(params2);
+    }
   /*
     {
         captionlist caption_list = NULL;
@@ -502,12 +503,12 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
     coordlist coordinate_list = NULL;
     params1->clean();
     params1->update = true;
-    coordinate_list = push_back_coords(coordinate_list, 0, &energy[0] , 1024);
+   coordinate_list = push_back_coords(coordinate_list, 0, &energy[0] , 512);
     
     Pair max = coordinate_list->max();
     Pair min = coordinate_list->min();
     
-    params1->push_back(0,  &energy[0], 1024);
+    params1->push_back(0,  &energy[0], 512);
     
     for (j = 0; j < 6; j++)
     { /* calculate unpredictability measure cw */

@@ -10,7 +10,7 @@
 /* Function prototypes */
 
 #define FONT_CHARACTER_SIZE  8
-#define MaxScreenX   1200
+#define MaxScreenX   1600
 #define MaxScreenY   800
 
 
@@ -344,7 +344,7 @@ typedef struct Plot_params_struct {
             X_FP = 2;
         }
         
-        if( max.y - min.y > 8)
+        if( max.y - min.y > 8 &&  max.y - min.y < 10000 )
         {
              int x;
             for( x = 0; x < 4 ; ++x)
@@ -358,6 +358,10 @@ typedef struct Plot_params_struct {
                 Y_FP = 1;
    
         }
+        if(  max.y - min.y > 10000 )
+        {
+             Y_FP = 3;
+        }
         else
         {
             Y_FP = 2;
@@ -366,7 +370,13 @@ typedef struct Plot_params_struct {
         
         
         
-        double plot_width = screen_width * 0.8;
+        double plot_width;
+        if(Y_FP == 3 )
+        {
+            plot_width = screen_width * 0.7;
+        }
+        else
+            plot_width = screen_width * 0.8;
         double plot_heigth = screen_heigth * 0.8;
         double plot_caption_heigth = screen_heigth * 0.05;
  

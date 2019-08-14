@@ -181,7 +181,7 @@ void Plot::draw_window(splot *plot, Plot_Window_params *win_params) {
 
             if (win_params->plotparm->update) {
 
-                win_params->plotparm->update = true;
+                win_params->plotparm->update = false;
 
                 w = win_params->plotparm->screen_width;
                 h = win_params->plotparm->screen_heigth;
@@ -270,12 +270,12 @@ void Plot::draw_plot(splot *plot, plot_params *params) {
         scree_position.h = params->screen_heigth;
 
 
-        SDL_SetRenderDrawColor(plot->renderer, 0, 255, 0, 255);
+        SDL_SetRenderDrawColor(plot->renderer, 0, 255, 0, 255); // outer green box
         SDL_RenderDrawRect(plot->renderer, &scree_position);
 
 
-        SDL_SetRenderDrawColor(plot->renderer, 0, 255, 0, 255);
-        SDL_RenderDrawRect(plot->renderer, &scree_position);
+       // SDL_SetRenderDrawColor(plot->renderer, 0, 255, 0, 255);
+       // SDL_RenderDrawRect(plot->renderer, &scree_position);
 
         // SDL_SetRenderDrawColor(plot->renderer, 255, 255, 0, 255);
         //  SDL_RenderDrawRect(plot->renderer, &plot_caption_position);
@@ -287,10 +287,7 @@ void Plot::draw_plot(splot *plot, plot_params *params) {
         // caption_y_position.y = plot_position.y;
 
 
-        draw_scale_graduation(plot->renderer,
-                params,
-                plot,
-                font_color);
+        draw_scale_graduation(plot->renderer,  params,  plot,  font_color);
 
         if (params->caption_list != NULL) {
             Caption_item *tmp = params->caption_list;
@@ -553,6 +550,8 @@ void Plot::draw_scale_graduation(SDL_Renderer * renderer,
             sprintf(text, "%.2f", current_scale);
         else if (params->Y_FP == 1)
             sprintf(text, "%.1f", current_scale);
+        else if (params->Y_FP == 3)
+            sprintf(text, "%.2e", current_scale);
         else
             sprintf(text, "%.0f", current_scale);
         
@@ -565,7 +564,7 @@ void Plot::draw_scale_graduation(SDL_Renderer * renderer,
 
         caption_text.w = FONT_CHARACTER_SIZE * strlen(text);
         caption_text.h = FONT_CHARACTER_SIZE + 2;
-        caption_text.x = init_pos_x - caption_text.w - 10;
+        caption_text.x = init_pos_x - caption_text.w - 1;
         caption_text.y = init_pos_y - caption_text.h / 2;
 
         //SDL_RenderCopy(renderer, texture_text, NULL, &caption_text);
@@ -585,7 +584,7 @@ void Plot::draw_scale_graduation(SDL_Renderer * renderer,
     SDL_Rect text_caption_y;
     text_caption_y.w = FONT_CHARACTER_SIZE * strlen(params->caption_text_y);
     text_caption_y.h = FONT_CHARACTER_SIZE + 2;
-    text_caption_y.x =  params->plot_position.x/2 - FONT_CHARACTER_SIZE -2;
+    text_caption_y.x =  params->screen_width - 1*FONT_CHARACTER_SIZE -2;
     text_caption_y.y = params->plot_position.y + params->plot_position.h / 2 + text_caption_y.w / 4;
 
     SDL_DrawString_Flip(renderer, text_caption_y.x, text_caption_y.y, params->caption_text_y, 8, &font_color);
@@ -597,7 +596,7 @@ void Plot::draw_scale_graduation(SDL_Renderer * renderer,
     text_caption_x.w = FONT_CHARACTER_SIZE * strlen(params->caption_text_x);
     text_caption_x.h = FONT_CHARACTER_SIZE + 2;
     text_caption_x.x = params->screen_width / 2 - text_caption_x.w / 2;
-    text_caption_x.y = params->plot_position.y + params->plot_position.h + 5 + 1 * regular_caption_text_heigth;
+    text_caption_x.y = params->screen_heigth  - 1 * FONT_CHARACTER_SIZE;
     //SDL_RenderCopy(plot->renderer, plot->textureX, NULL, &text_caption_x);
     SDL_DrawString(renderer, text_caption_x.x, text_caption_x.y, params->caption_text_x, 8, &font_color);
 

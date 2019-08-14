@@ -135,6 +135,8 @@ private:
 public:
     
     plot_params *params1; 
+    plot_params *params2; 
+    plot_params *params3; 
 };
 
 #endif /* PSYCHO_ANAL_H */
