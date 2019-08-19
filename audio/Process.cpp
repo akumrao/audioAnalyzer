@@ -112,14 +112,13 @@ unsigned int Process::codecEncodeChunk( AudioBuffer& newBuffer){
     /*		psychoacoustic model */
 
     for (gr = 0; gr < 2; gr++)
-        for (ch = 0; ch < stereo; ch++)
-        {
+        for (ch = 0; ch < stereo; ch++) {
             psycho_anal.psycho_anal(&newBuffer[ch][gr * 576], &sam[ch][0], ch, 3, snr32, &ratio.l[gr][ch][0],
-                   &ratio.s[gr][ch][0], &pe[gr][ch], &l3_side.gr[gr].ch[ch].tt);
+                    &ratio.s[gr][ch][0], &pe[gr][ch], &l3_side.gr[gr].ch[ch].tt);
 
         }
 
-   if( inc + 1152 < newBuffer.size() ) 
-       inc = inc + 1152;
+    if (inc + 1152 < newBuffer.size())
+        inc = inc + 1152;
  return 0;   
 }

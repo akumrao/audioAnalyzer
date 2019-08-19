@@ -604,7 +604,17 @@ plotwinlist clear_plot_win(plotwinlist list) {
         while (current != NULL) {
             next = current->nxt;
             //SDL_FreeSurface(current->surface);
+            
+              plot_params * params = current->plotparm;
+             params->clean();
+             params->caption_list = clear_caption(params->caption_list);
+             params->coordinate_list = clear_coord(params->coordinate_list);
+    
+            
+            
             free(current);
+            
+            
             current = next;
         }
 

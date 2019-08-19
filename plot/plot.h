@@ -59,7 +59,9 @@ public:
 
     static int run(void *arg);
 
-    std::function<void(void)> f_callback;
+    std::function<bool(void)> f_callback;
+    
+    std::function<void(void)> f_callback_stop;
 
     /**
      * @brief draw_scale_graduation
@@ -138,7 +140,7 @@ public:
      * @param surface_list
      *      list of surfaces stored to be freed later
      */
-    void clean_plot(splot *plot, plot_params *params);
+    void clean_plot(splot *plot);
 
     /*
      * from : http://content.gpwiki.org/index.php/SDL:Tutorials:Drawing_and_Filling_Circles

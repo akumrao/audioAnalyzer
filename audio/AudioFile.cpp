@@ -672,6 +672,22 @@ const char *SdlAudioFormatToString(int sdlAudioType) {
   }
 }
 
+
+template <class T>
+bool AudioFile<T>::stop() {
+    
+   SDL_PauseAudio(1);
+   SDL_CloseAudio();
+   
+    clearAudioBuffer();
+   
+    rawPCMint16.clear();
+    
+    rawPCMFloat.clear();
+            
+    return true;
+}
+
 template <class T>
 bool AudioFile<T>::play() {
    

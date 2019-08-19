@@ -10,7 +10,7 @@
 /* Function prototypes */
 
 #define FONT_CHARACTER_SIZE  8
-#define MaxScreenX   1600
+#define MaxScreenX   2400
 #define MaxScreenY   800
 
 
@@ -246,6 +246,8 @@ typedef struct Plot_params_struct {
             kv.second.clear();
           
          }
+         
+         points.clear();
     }
     
      
@@ -253,40 +255,35 @@ typedef struct Plot_params_struct {
     {
        if (!points[id].empty())
         points[id].erase(points[id].begin());
-     }
+    }
+    
+
     void push_back( int id,  float *points, int size)
     {
-         
          for(int i=0; i < size ; ++i)
          {
-         
            push_back( id, i, points[i]);
-          
          }
-        
     }
+    
+
     void push_back( int id,  short int *points, int size)
     {
-         
          for(int i=0; i < size ; ++i)
          {
-         
            push_back( id, i, points[i]);
           
          }
-        
     }
+
     void push_back( int id,  double *points, int size)
     {
-         
          for(int i=0; i < size ; ++i)
          {
-         
            push_back( id, i, points[i]);
-          
          }
-        
-    }   
+    }
+
     void push_back( int id, float x, float y)
     {
         if( !max.x || !max.y )
@@ -367,9 +364,6 @@ typedef struct Plot_params_struct {
             Y_FP = 2;
         }
         
-        
-        
-        
         double plot_width;
         if(Y_FP == 3 )
         {
@@ -417,6 +411,8 @@ struct Plot_Window_params {
 
         return nc;
     }
+    
+
 };
 
 typedef Plot_Window_params* plotwinlist;

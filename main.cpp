@@ -144,9 +144,10 @@ const char *SdlAudioFormatToString1(int sdlAudioType) {
   }
 }
 
+
 int main(int argc, char* argv[]) {
 
-   printf("plot_graph\n");
+    printf("plot_graph\n");
    
    /*
    if (SDL_Init(SDL_INIT_AUDIO) < 0)
@@ -201,7 +202,7 @@ int main(int argc, char* argv[]) {
         return 0;
    */
    
-   AudioFile<float> audioFile;
+   AudioFile<double> audioFile;
 
     
    
@@ -319,7 +320,7 @@ int main(int argc, char* argv[]) {
 
     }
 */
-   
+   /*
      {
          //populate caption list
          captionlist caption_list = NULL;
@@ -343,13 +344,18 @@ int main(int argc, char* argv[]) {
          push_back_plot_win(params);
 
      }
-   
+   */
 
+   
+    
     Plot plot;  //std::bind( &Foo::print_add, foo, _1 );
     // using std::placeholders::_1;
-    //plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, audioFile );
+  //  plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, &audioFile );
+   //    std::function<bool(void)> d1 =  std::bind( &AudioFile<double>::analyzeWave, &audioFile );
+      
+     plot.f_callback_stop= std::bind( &AudioFile<double>::stop, &audioFile );
     
-    
+   
     audioFile.printSummary();
     audioFile.play();
 

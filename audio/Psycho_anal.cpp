@@ -161,7 +161,9 @@ void Psycho_anal::Init(double sfreq) {
     {
         captionlist caption_list = NULL;
         caption_list = push_back_caption(caption_list, "Energy", 0, 0x0000FF);
-        params1 = new plot_params("x", "y", caption_list, NULL, 800, 400,{512, 3.40282e+5 },  { 0  , -47169964 });
+        params1 = new plot_params("x", "y", caption_list, NULL, 800, 400,{512, 1.41994e+07+15 },  { 0  , 453698});
+       // params1 = new plot_params("x", "y", caption_list, NULL, 800, 400,{5, 3.9265e+5 },  { -5  , -3.9265e+5 });
+        
         push_back_plot_win(params1);
     }
     
@@ -169,9 +171,36 @@ void Psycho_anal::Init(double sfreq) {
     {
         captionlist caption_list = NULL;
         caption_list = push_back_caption(caption_list, "Uncertinity", 0, 0x0000FF);
-        params2 = new plot_params("x", "y", caption_list, NULL, 800, 400,{512, 10},  {   0, -5 });
+        params2 = new plot_params("x", "y", caption_list, NULL, 800, 400,{512, 2},  {   0, 0 });
         push_back_plot_win(params2);
     }
+    
+     {
+        captionlist caption_list = NULL;
+        caption_list = push_back_caption(caption_list, "UncertinityEN", 0, 0x0000FF);
+        params3 = new plot_params("x", "y", caption_list, NULL, 800, 400,{63, 1.41994e+07+15},  {   0, 0 });
+        push_back_plot_win(params3);
+    }
+
+    {
+        captionlist caption_list = NULL;
+        caption_list = push_back_caption(caption_list, "UncertinityEN", 0, 0x0000FF);
+        params4 = new plot_params("x", "y", caption_list, NULL, 800, 400,{63, 1.41994e+07 + 15},
+        {
+            0, 0 });
+        push_back_plot_win(params4);
+    }
+    
+
+    {
+        captionlist caption_list = NULL;
+        caption_list = push_back_caption(caption_list, "UncertinityEN", 0, 0x0000FF);
+        params5 = new plot_params("x", "y", caption_list, NULL, 800, 400,{63, 1.41994e+07 + 15},
+        {
+            0, 0 });
+        push_back_plot_win(params5);
+    }
+      
   /*
     {
         captionlist caption_list = NULL;
@@ -274,6 +303,7 @@ void Psycho_anal::L3para_read(int sfreq, int *numlines, int *partition_l, double
             break;
         default: return; /* Just to avoid compiler warnings */
     }
+
 /*
  ndex of the partition,
 b
@@ -289,6 +319,8 @@ b
 ������������������ The value for tonal masking noise for that partition, TMN
 b
  */
+
+    
     for (i = 0, k2 = 0; i < cbmax_tp; i++) {
         numlines[i] = rpa1->lines;
         minval[i] = rpa1->minVal;
@@ -508,8 +540,30 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
     Pair max = coordinate_list->max();
     Pair min = coordinate_list->min();
     
+    
+    std::cout <<  max.x  <<  ", " << max.y << " , " << min.x  <<  ", " << min.y << " , "  << std::endl << std::flush;
+    
+    params1->max = max;
+    params1->min = min;
+    
+    
+    clear_coord(coordinate_list);
+    
     params1->push_back(0,  &energy[0], 512);
     
+      /*  params1->push_back( 0, -5, -3.9265e+5);
+        params1->push_back( 0, -4, -3.9265e+4);
+        params1->push_back( 0, -3, -3.9265e+3);
+        params1->push_back( 0, -2, -3.9265e+2);
+        params1->push_back( 0, -1, -3.9265e+1);
+        params1->push_back( 0, 0.0, 0.0);
+        params1->push_back( 0, 1, 3.9265e+1);
+        params1->push_back( 0, 2, 3.9265e+2);
+        params1->push_back( 0, 3, 3.9265e+3);
+        params1->push_back( 0, 4, 3.9265e+4);
+        params1->push_back( 0, 5, 3.9265e+5);
+        
+    */
     for (j = 0; j < 6; j++)
     { /* calculate unpredictability measure cw */
         double r1, phi1;
@@ -586,6 +640,33 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
     }
 
 
+    {
+    coordlist coordinate_list = NULL;
+    params2->clean();
+    params2->update = true;
+   coordinate_list = push_back_coords(coordinate_list, 0, &cw[0] , 512);
+    
+    Pair max = coordinate_list->max();
+    Pair min = coordinate_list->min();
+    
+    
+    std::cout <<  max.x  <<  ", " << max.y << " , " << min.x  <<  ", " << min.y << " , "  << std::endl << std::flush;
+    
+    params2->max = max;
+    params2->min = min;
+    
+    
+    clear_coord(coordinate_list);
+    
+    params2->push_back(0,  &cw[0], 512);
+    
+    }
+    
+    
+    
+    
+    
+    
     /**********************************************************************
      *    Calculate the energy and the unpredictability in the threshold   *
      *    calculation partitions                                           *
@@ -607,6 +688,51 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
     }
 
 
+    {
+        coordlist coordinate_list = NULL;
+        params3->clean();
+        params3->update = true;
+        coordinate_list = push_back_coords(coordinate_list, 0, &cb[0], 63);
+
+        Pair max = coordinate_list->max();
+        Pair min = coordinate_list->min();
+
+
+        std::cout << max.x << ", " << max.y << " , " << min.x << ", " << min.y << " , " << std::endl << std::flush;
+
+        params3->max = max;
+        params3->min = min;
+
+
+        clear_coord(coordinate_list);
+
+        params3->push_back(0, &cb[0], 63);
+
+    }
+    
+
+    {
+        coordlist coordinate_list = NULL;
+        params4->clean();
+        params4->update = true;
+        coordinate_list = push_back_coords(coordinate_list, 0, &eb[0], 63);
+
+        Pair max = coordinate_list->max();
+        Pair min = coordinate_list->min();
+
+
+        std::cout << max.x << ", " << max.y << " , " << min.x << ", " << min.y << " , " << std::endl << std::flush;
+
+        params4->max = max;
+        params4->min = min;
+
+
+        clear_coord(coordinate_list);
+
+        params4->push_back(0, &eb[0], 63);
+
+    }
+
     /**********************************************************************
      *      convolve the partitioned energy and unpredictability           *
      *      with the spreading function, s3_l[b][k]                        *
@@ -625,6 +751,9 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
             ctb[b] += s3_l[b][k] * cb[k];
         }
     }
+    
+
+
 
     /* calculate the tonality of each threshold calculation partition */
     /* calculate the SNR in each threshhold calculation partition */
@@ -656,6 +785,29 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
         thr[b] = maximum(qthr_l[b], temp_1); /* rpelev=2.0, rpelev2=16.0 */
         nb_2[chn][b] = nb_1[chn][b];
         nb_1[chn][b] = nb[b];
+    }
+    
+
+    {
+        coordlist coordinate_list = NULL;
+        params5->clean();
+        params5->update = true;
+        coordinate_list = push_back_coords(coordinate_list, 0, &nb[0], 63);
+
+        Pair max = coordinate_list->max();
+        Pair min = coordinate_list->min();
+
+
+        std::cout << max.x << ", " << max.y << " , " << min.x << ", " << min.y << " , " << std::endl << std::flush;
+
+        params5->max = max;
+        params5->min = min;
+
+
+        clear_coord(coordinate_list);
+
+        params5->push_back(0, &nb[0], 63);
+
     }
 
     *pe = 0.0; /*  calculate percetual entropy */

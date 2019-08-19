@@ -132,9 +132,13 @@ int Plot::plot_graph( const char *title) {
     SDL_RenderClear(plot.renderer);
     wait_for_sdl_event();
 #endif
+    
+    if (f_callback_stop)
+        f_callback_stop();
 
-
-    clean_plot(&plot, params);
+    clear_plot_win( win_params);
+            
+    clean_plot(&plot);
 
     return EXIT_SUCCESS;
 }
@@ -149,12 +153,8 @@ int Plot::plot_graph( const char *title) {
  * @param surface_list
  *      list of surfaces stored to be freed later
  */
-void Plot::clean_plot(splot *plot, plot_params *params) {
+void Plot::clean_plot(splot *plot) {
 
-    params->caption_list = clear_caption(params->caption_list);
-    params->coordinate_list = clear_coord(params->coordinate_list);
-
-    // *surface_list = clear_surface(*surface_list);
 
     SDL_DestroyRenderer(plot->renderer);
     SDL_DestroyWindow(plot->screen);
@@ -167,6 +167,8 @@ void Plot::draw_window(splot *plot, Plot_Window_params *win_params) {
 
     if (f_callback)
         f_callback();
+    
+    
     
     if (plot->screen != NULL) {
 
