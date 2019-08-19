@@ -384,7 +384,14 @@ bool AudioFile<T>::analyzeWave() {
 
     params1->clean();
     params1->update = true;
-    coordinate_list = push_back_coords(coordinate_list, 0, &samples[0][0] , 1024);
+    //coordinate_list = push_back_coords(coordinate_list, 0, &samples[0][0] , 1024);
+    //Pair max = coordinate_list->max();
+    //Pair min = coordinate_list->min();
+     //std::cout <<  max.x  <<  ", " << max.y << " , " << min.x  <<  ", " << min.y << " , "  << std::endl << std::flush;
+    // params1->max = max;
+    // params1->min = min;
+    //clear_coord(coordinate_list);
+    
     params1->push_back(0,  &samples[0][frameSampleSize] , 1024);
 
 
@@ -467,14 +474,14 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
     int numSamples = dataChunkSize / (nChannels * bitDepth / 8);
     int samplesStartIndex = indexOfDataChunk + 8;
 
-    clearAudioBuffer();
+    clear();
     samples.resize(nChannels);
     
-    rawPCMint16.clear();
+
     rawPCMint16.resize(nChannels);
    
     
-    rawPCMFloat.clear();
+
     rawPCMInt.assign( &fileData[samplesStartIndex],  &fileData[samplesStartIndex +dataChunkSize]);
             
     for (int i = 0; i < numSamples; i++) {
@@ -620,7 +627,7 @@ bool AudioFile<T>::decodeAiffFile(std::vector<uint8_t>& fileData) {
         return false;
     }
 
-    clearAudioBuffer();
+    clear();
     samples.resize(numChannels);
 
     for (int i = 0; i < numSamplesPerChannel; i++) {
@@ -674,16 +681,37 @@ const char *SdlAudioFormatToString(int sdlAudioType) {
 
 
 template <class T>
+void AudioFile<T>::clear() {
+    
+
+
+    for (auto& kv : rawPCMint16) {
+          kv.clear();
+    }
+
+    rawPCMint16.clear();
+
+    for (int i = 0; i < samples.size(); i++) {
+        samples[i].clear();
+    }
+
+    samples.clear();
+    
+    rawPCMFloat.clear();
+            
+}
+
+template <class T>
 bool AudioFile<T>::stop() {
     
    SDL_PauseAudio(1);
    SDL_CloseAudio();
    
-    clearAudioBuffer();
-   
-    rawPCMint16.clear();
+
+
     
-    rawPCMFloat.clear();
+    clear();
+   
             
     return true;
 }
@@ -1105,18 +1133,7 @@ void AudioFile<T>::addInt16ToFileData(std::vector<uint8_t>& fileData, int16_t i,
     fileData.push_back(bytes[1]);
 }
 
-//=============================================================
 
-template <class T>
-void AudioFile<T>::clearAudioBuffer() {
-    for (int i = 0; i < samples.size(); i++) {
-        samples[i].clear();
-    }
-
-    samples.clear();
-}
-
-//=============================================================
 
 template <class T>
 AudioFileFormat AudioFile<T>::determineAudioFileFormat(std::vector<uint8_t>& fileData) {

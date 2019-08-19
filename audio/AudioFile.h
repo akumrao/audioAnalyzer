@@ -187,7 +187,7 @@ private:
     bool saveToAiffFile (std::string filePath);
     
     //=============================================================
-    void clearAudioBuffer();
+    void clear ();
     
     //=============================================================
     int32_t fourBytesToInt (std::vector<uint8_t>& source, int startIndex, Endianness endianness = Endianness::LittleEndian);
@@ -221,6 +221,8 @@ private:
    //=============================================================
     bool play ();
     bool stop ();
+
+    
     //=============================================================
     private:
     
