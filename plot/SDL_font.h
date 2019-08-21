@@ -289,6 +289,7 @@ typedef struct Plot_params_struct {
         if( !max.x || !max.y )
         {
             printf("Please pass min, max , scale values to plot construct\n");
+            printf(" Abruptly Quitting \n");
            // throw();
             exit(0);
         }  

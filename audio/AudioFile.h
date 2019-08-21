@@ -250,6 +250,9 @@ public:
     static void audio_callback_INT(void *data, Uint8 *stream, int length);
     static void audio_callback_FLOAT(void *data, Uint8 *stream, int length);
     
+    
+   bool  m_Soppped;
+    
 };
 
 #endif /* AudioFile_h */

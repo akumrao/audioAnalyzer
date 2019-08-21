@@ -217,6 +217,10 @@ int main(int argc, char* argv[]) {
 
    
    // bool ret1 = audioFile.load("/root/Desktop/delete/test2.wav");
+   
+    if(argc == 2)
+    bool ret1 = audioFile.load(argv[1]);
+    else
     bool ret1 = audioFile.load("./outputs16.wav");
 
     audioFile.printSummary();

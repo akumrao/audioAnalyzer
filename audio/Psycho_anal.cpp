@@ -184,20 +184,16 @@ void Psycho_anal::Init(double sfreq) {
 
     {
         captionlist caption_list = NULL;
-        caption_list = push_back_caption(caption_list, "UncertinityEN", 0, 0x0000FF);
-        params4 = new plot_params("x", "y", caption_list, NULL, 800, 400,{63, 1.41994e+07 + 15},
-        {
-            0, 0 });
+        caption_list = push_back_caption(caption_list, "enb", 0, 0x0000FF);
+        params4 = new plot_params("x", "y", caption_list, NULL, 800, 400,{63, 1},   {  0, 0 });
         push_back_plot_win(params4);
     }
     
 
     {
         captionlist caption_list = NULL;
-        caption_list = push_back_caption(caption_list, "UncertinityEN", 0, 0x0000FF);
-        params5 = new plot_params("x", "y", caption_list, NULL, 800, 400,{63, 1.41994e+07 + 15},
-        {
-            0, 0 });
+        caption_list = push_back_caption(caption_list, "SNRb", 0, 0x0000FF);
+        params5 = new plot_params("x", "y", caption_list, NULL, 800, 400,{63, 25},{  0, 0 });
         push_back_plot_win(params5);
     }
       
@@ -301,7 +297,14 @@ void Psycho_anal::L3para_read(int sfreq, int *numlines, int *partition_l, double
         case 48000: rpa1 = psy_longBlock_48000_61;
             cbmax_tp = 62;
             break;
-        default: return; /* Just to avoid compiler warnings */
+        default:
+        {
+            printf("Supported freq  [32000, 44100, 48000].  It does not support frequency %d \n", sfreq);
+            printf(" Abruptly Quitting \n");
+            // throw();
+            exit(0);
+            return; /* Just to avoid compiler warnings */
+        }
     }
 
 /*
@@ -711,27 +714,6 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
     }
     
 
-    {
-        coordlist coordinate_list = NULL;
-        params4->clean();
-        params4->update = true;
-        coordinate_list = push_back_coords(coordinate_list, 0, &eb[0], 63);
-
-        Pair max = coordinate_list->max();
-        Pair min = coordinate_list->min();
-
-
-        std::cout << max.x << ", " << max.y << " , " << min.x << ", " << min.y << " , " << std::endl << std::flush;
-
-        params4->max = max;
-        params4->min = min;
-
-
-        clear_coord(coordinate_list);
-
-        params4->push_back(0, &eb[0], 63);
-
-    }
 
     /**********************************************************************
      *      convolve the partitioned energy and unpredictability           *
@@ -792,21 +774,21 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
         coordlist coordinate_list = NULL;
         params5->clean();
         params5->update = true;
-        coordinate_list = push_back_coords(coordinate_list, 0, &nb[0], 63);
+        coordinate_list = push_back_coords(coordinate_list, 0, &SNR_l[0], 63);
 
         Pair max = coordinate_list->max();
         Pair min = coordinate_list->min();
 
 
         std::cout << max.x << ", " << max.y << " , " << min.x << ", " << min.y << " , " << std::endl << std::flush;
-
-        params5->max = max;
-        params5->min = min;
+//
+ //       params5->max = max;
+  //      params5->min = min;
 
 
         clear_coord(coordinate_list);
 
-        params5->push_back(0, &nb[0], 63);
+        params5->push_back(0, &SNR_l[0], 63);
 
     }
 
@@ -859,6 +841,30 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
             else
                 ratio[chn][sb] = 0.0;
         }
+        
+
+        {
+            coordlist coordinate_list = NULL;
+            params4->clean();
+            params4->update = true;
+            coordinate_list = push_back_coords(coordinate_list, 0, &en[0], 63);
+
+            Pair max = coordinate_list->max();
+            Pair min = coordinate_list->min();
+
+
+            std::cout << max.x << ", " << max.y << " , " << min.x << ", " << min.y << " , " << std::endl << std::flush;
+
+            params4->max = max;
+            params4->min = min;
+
+
+            clear_coord(coordinate_list);
+            params4->push_back(0, &en[0], 63);
+
+        }
+
+        
     } else
     {
         /* attack : use short blocks */

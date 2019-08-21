@@ -30,7 +30,7 @@ https://carthick.wordpress.com/2007/11/26/linux-recording-soundcard-output-using
 #include <sys/types.h> 
 #include <unistd.h> 
 #include <numeric> // std::iota 
-
+#include <climits> 
 
  
 
@@ -81,7 +81,7 @@ std::unordered_map <uint32_t, std::vector<uint8_t>> aiffSampleRateTable = {
 //=============================================================
 
 template <class T>
-AudioFile<T>::AudioFile():alradyPlayed(0)  {
+AudioFile<T>::AudioFile():alradyPlayed(0), m_Soppped(false)  {
     bitDepth = 16;
     sampleRate = 44100;
     samples.resize(1);
@@ -375,34 +375,38 @@ bool AudioFile<T>::openWave(std::string filePath) {
 template <class T>
 bool AudioFile<T>::analyzeWave() {
 
-    
- 
-    static int frameSampleSize = 0;
-    process.codecEncodeChunk(rawPCMint16);
+    if (!m_Soppped) {
 
-    coordlist coordinate_list = NULL;
+        static int frameSampleSize = 0;
+        process.codecEncodeChunk(rawPCMint16);
 
-    params1->clean();
-    params1->update = true;
-    //coordinate_list = push_back_coords(coordinate_list, 0, &samples[0][0] , 1024);
-    //Pair max = coordinate_list->max();
-    //Pair min = coordinate_list->min();
-     //std::cout <<  max.x  <<  ", " << max.y << " , " << min.x  <<  ", " << min.y << " , "  << std::endl << std::flush;
-    // params1->max = max;
-    // params1->min = min;
-    //clear_coord(coordinate_list);
-    
-    params1->push_back(0,  &samples[0][frameSampleSize] , 1024);
+        coordlist coordinate_list = NULL;
+
+        params1->clean();
+        params1->update = true;
+        //coordinate_list = push_back_coords(coordinate_list, 0, &samples[0][0] , 1024);
+        //Pair max = coordinate_list->max();
+        //Pair min = coordinate_list->min();
+        //std::cout <<  max.x  <<  ", " << max.y << " , " << min.x  <<  ", " << min.y << " , "  << std::endl << std::flush;
+        // params1->max = max;
+        // params1->min = min;
+        //clear_coord(coordinate_list);
+
+        params1->push_back(0, &samples[0][frameSampleSize], 1024);
 
 
-    frameSampleSize += 1024;
-    if( frameSampleSize > samples[0].size())
-    {
-        frameSampleSize =0;
+        frameSampleSize += 1024;
+        if (frameSampleSize > samples[0].size()) {
+            frameSampleSize = 0;
+        }
+
+
+        return true;
     }
-        
-       
-    return true;
+    else 
+    {
+        return false;
+    }
 }
 
 //=============================================================
@@ -525,6 +529,25 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
                     sampleAsFloat = -1;
                 rawPCMFloat.push_back(sampleAsFloat);
                 samples[channel].push_back(sampleAsFloat);
+                const float  m_max = INT_MAX;
+                const float  m_min = -(float) INT_MIN;
+
+
+                int v;
+                if (sampleAsFloat >= 1) {
+                    v = INT_MAX;
+                } else if (sampleAsFloat <= -1) {
+                    v = INT_MIN;
+                } else if (sampleAsFloat >= 0) {
+                    v = (int) (sampleAsFloat * m_max + 0.5f);
+                } else {
+                    v = (int) (sampleAsFloat * m_min - 0.5f);
+                }
+
+
+                int16_t sample16 = v >> (8 * sizeof (int) - 16);
+                rawPCMint16[channel].push_back(sample16);
+                ///////////////////////////////////////
             } else {
                 assert(false);
             }
@@ -704,6 +727,7 @@ void AudioFile<T>::clear() {
 template <class T>
 bool AudioFile<T>::stop() {
     
+   m_Soppped = true;
    SDL_PauseAudio(1);
    SDL_CloseAudio();
    
@@ -1246,8 +1270,8 @@ void AudioFile<T>::generateSamplesInt(Uint8 *stream, int length)
         alradyPlayed = alradyPlayed + length;
     }else
     {
-    SDL_PauseAudio(1);
-    SDL_CloseAudio();
+        stop();
+
     }
     
 }
