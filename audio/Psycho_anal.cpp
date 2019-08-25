@@ -11,6 +11,14 @@
  * Created on April 28, 2019, 7:11 PM
  */
 
+#define GRAPH1 1
+#define GRAPH2 1
+#define GRAPH3 1
+#define GRAPH4 1
+#define GRAPH5 1
+
+
+
 #include "Psycho_anal.h"
 #include <cstdlib>
 #include "Fft.h"
@@ -160,8 +168,8 @@ void Psycho_anal::Init(double sfreq) {
     
     {
         captionlist caption_list = NULL;
-        caption_list = push_back_caption(caption_list, "Energy", 0, 0x0000FF);
-        params1 = new plot_params("x", "y", caption_list, NULL, 800, 400,{512, 1.41994e+07+15 },  { 0  , 453698});
+        caption_list = push_back_caption(caption_list, "Energy11", 0, 0x0000FF);
+        params1 = new plot_params("x", "y", caption_list, NULL, 800, 400,{512, 0.0005 },  { 0  , 0});
        // params1 = new plot_params("x", "y", caption_list, NULL, 800, 400,{5, 3.9265e+5 },  { -5  , -3.9265e+5 });
         
         push_back_plot_win(params1);
@@ -193,7 +201,7 @@ void Psycho_anal::Init(double sfreq) {
     {
         captionlist caption_list = NULL;
         caption_list = push_back_caption(caption_list, "SNRb", 0, 0x0000FF);
-        params5 = new plot_params("x", "y", caption_list, NULL, 800, 400,{63, 25},{  0, 0 });
+        params5 = new plot_params("x", "y", caption_list, NULL, 800, 400,{63, 30},{  0, 0 });
         push_back_plot_win(params5);
     }
       
@@ -534,39 +542,38 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
 
 
     fft(wsamp_r, wsamp_i, energy, phi, BLKSIZE); /* long FFT */
+     
+    #if GRAPH1
+        {
+            coordlist coordinate_list = NULL;
+            params1->clean();
+            params1->update = true;
+            coordinate_list = push_back_coords(coordinate_list, 0, &energy[0], 512);
 
-    coordlist coordinate_list = NULL;
-    params1->clean();
-    params1->update = true;
-   coordinate_list = push_back_coords(coordinate_list, 0, &energy[0] , 512);
+            Pair max = coordinate_list->max();
+            Pair min = coordinate_list->min();
+
+
+            if (max.y && min.y && !(max.y - min.y)) {
+
+                if (max.y > 0)
+                    min.y = 0;
+                else
+                    max.y = 0;
+            }
+            
+             std::cout << max.x << ", " << max.y << " , " << min.x << ", " << min.y << " , " << std::endl << std::flush;
+            params1->max = max;
+            params1->min = min;
+
+
+            clear_coord(coordinate_list);
+
+            params1->push_back(0, &energy[0], 512);
+        }
+    #endif
     
-    Pair max = coordinate_list->max();
-    Pair min = coordinate_list->min();
-    
-    
-    std::cout <<  max.x  <<  ", " << max.y << " , " << min.x  <<  ", " << min.y << " , "  << std::endl << std::flush;
-    
-    params1->max = max;
-    params1->min = min;
-    
-    
-    clear_coord(coordinate_list);
-    
-    params1->push_back(0,  &energy[0], 512);
-    
-      /*  params1->push_back( 0, -5, -3.9265e+5);
-        params1->push_back( 0, -4, -3.9265e+4);
-        params1->push_back( 0, -3, -3.9265e+3);
-        params1->push_back( 0, -2, -3.9265e+2);
-        params1->push_back( 0, -1, -3.9265e+1);
-        params1->push_back( 0, 0.0, 0.0);
-        params1->push_back( 0, 1, 3.9265e+1);
-        params1->push_back( 0, 2, 3.9265e+2);
-        params1->push_back( 0, 3, 3.9265e+3);
-        params1->push_back( 0, 4, 3.9265e+4);
-        params1->push_back( 0, 5, 3.9265e+5);
-        
-    */
+
     for (j = 0; j < 6; j++)
     { /* calculate unpredictability measure cw */
         double r1, phi1;
@@ -641,13 +648,13 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
 
         cw[j + 1] = cw[j + 2] = cw[j + 3] = cw[j];
     }
-
-
+    
+    #if GRAPH2
     {
     coordlist coordinate_list = NULL;
     params2->clean();
     params2->update = true;
-   coordinate_list = push_back_coords(coordinate_list, 0, &cw[0] , 512);
+    coordinate_list = push_back_coords(coordinate_list, 0, &cw[0] , 512);
     
     Pair max = coordinate_list->max();
     Pair min = coordinate_list->min();
@@ -664,7 +671,7 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
     params2->push_back(0,  &cw[0], 512);
     
     }
-    
+     #endif
     
     
     
@@ -690,7 +697,7 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
         }
     }
 
-
+    #if GRAPH3
     {
         coordlist coordinate_list = NULL;
         params3->clean();
@@ -712,7 +719,7 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
         params3->push_back(0, &cb[0], 63);
 
     }
-    
+    #endif
 
 
     /**********************************************************************
@@ -768,8 +775,8 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
         nb_2[chn][b] = nb_1[chn][b];
         nb_1[chn][b] = nb[b];
     }
-    
 
+    #if GRAPH5
     {
         coordlist coordinate_list = NULL;
         params5->clean();
@@ -791,6 +798,7 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
         params5->push_back(0, &SNR_l[0], 63);
 
     }
+    #endif
 
     *pe = 0.0; /*  calculate percetual entropy */
     for (b = 0; b < CBANDS; b++)
@@ -841,8 +849,8 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
             else
                 ratio[chn][sb] = 0.0;
         }
-        
 
+        #if GRAPH4
         {
             coordlist coordinate_list = NULL;
             params4->clean();
@@ -863,7 +871,7 @@ void Psycho_anal::psycho_anal(short int *buffer, short int savebuf[1344], int ch
             params4->push_back(0, &en[0], 63);
 
         }
-
+        #endif
         
     } else
     {

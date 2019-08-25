@@ -324,7 +324,25 @@ typedef struct Plot_params_struct {
             min = coordinate_lst->min();
          }
         
-        if( max.x - min.x > 8)
+        if(  max.x && min.x && !(max.x - min.x))
+        {
+           if( max.x > 0  )
+           min.x =0;
+           else
+           max.x =0;
+        }
+        
+        if(  max.y && min.y && !(max.y - min.y) )
+        {
+          
+           if( max.y > 0  )
+           min.y =0;
+           else
+           max.y =0;
+        }
+ 
+        
+        if( abs( max.x - min.x) > 8)
         {
             int x;
             for( x = 0; x < 4 ; ++x)
@@ -339,10 +357,15 @@ typedef struct Plot_params_struct {
    
         }else
         {
+           if(  (max.x  == (int)max.x)  && (min.x  == (int)min.x) &&  abs( max.x - min.x) > 1 &&  abs( max.x - min.x) < 9)
+           {
+               vertCell = abs( max.x - min.x);
+           }
+           else
             X_FP = 2;
         }
         
-        if( max.y - min.y > 8 &&  max.y - min.y < 10000 )
+        if(  abs(max.y - min.y) > 8 &&   abs(max.y - min.y) < 10000 )
         {
              int x;
             for( x = 0; x < 4 ; ++x)
@@ -356,12 +379,17 @@ typedef struct Plot_params_struct {
                 Y_FP = 1;
    
         }
-        if(  max.y - min.y > 10000 )
+        if(  abs( max.y - min.y) > 10000 ||  abs( max.y - min.y) < .001 )
         {
              Y_FP = 3;
         }
         else
         {
+           if(  (max.y  == (int)max.y)  && (min.y  == (int)min.y) &&  abs( max.y - min.y) > 1 &&  abs( max.y - min.y) < 9)
+           {
+               horzCell = abs( max.y - min.y);
+           }
+           else
             Y_FP = 2;
         }
         
