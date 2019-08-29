@@ -12,113 +12,94 @@
  */
 
 #include "Process.h"
+#include  <iostream>
 
-Process::Process() {
-}
+Process::Process(const char * filePath) : pBuffer(NULL), samplesPerFrame(0), outputFile(filePath, std::ios::binary) {
 
-Process::Process(const Process& orig) {
+    if (!outputFile.is_open()) {
+
+        std::cout << "could not able to create mp3 file " << filePath << std::endl;
+    }
+
 }
 
 Process::~Process() {
+
+
 }
 
-void Process::Init(double sfreq) {
+void Process::Exit() {
     
-    psycho_anal.Init(sfreq);
-}
-void Process::rebuffer_audio(short buffer[2][1152], short * insamp, unsigned int samples_read, int stereo){
-    unsigned int j;
-
-    if (stereo == 2)
+    if(pBuffer)
     {
+        int encodedChunkSize = codecFlush (pBuffer);
+        if (encodedChunkSize != 0)
+                 outputFile.write(pBuffer, encodedChunkSize);
+   
+         encodedChunkSize = codecExit(pBuffer);
+        if (encodedChunkSize != 0)
+            outputFile.write(pBuffer, encodedChunkSize);
 
-        for (j = 0; j < samples_read / 2; j++)
-        {
-            buffer[0][j] = insamp[2 * j];
-            buffer[1][j] = insamp[2 * j + 1];
-        }
-    } else
-    {
-        for (j = 0; j < samples_read; j++)
-        {
-            buffer[0][j] = insamp[j];
-            buffer[1][j] = 0;
-        }
-    }
+        free(pBuffer);
 
-    for (; j < 1152; j++)
-    {
-        buffer[0][j] = 0;
-        buffer[1][j] = 0;
-    }
+        outputFile.close();
 
-    return;
+       
+
+        pBuffer = NULL;
+    
+     }
+
 }
 
+void Process::Init(int sfreq, int mode) {
 
-unsigned int Process::codecEncodeChunk( AudioBuffer& newBuffer){
+    CodecInitIn sCodec;
 
-    static double xr[2][2][576];
-    static double xr_dec[2][2][576];
-    static double pe[2][2];
-    static int l3_enc[2][2][576];
+    sCodec.frequency = sfreq;
+    sCodec.mode = mode;
 
-    int gr, ch;
-    int mean_bits, sideinfo_len;
-    int bitsPerFrame;
-    int j;
-    
-    stereo = newBuffer.size();
-    
-   // pEncodedOutput = pDest;
-    outputBit = 8;
-   // pEncodedOutput[0] = 0;
 
-   // rebuffer_audio(buffer, pSamples, nSamples, stereo);
-
-    if (frac_SpF != 0)
-    {
-        if (slot_lag > (frac_SpF - 1.0))
-        {
-            slot_lag -= frac_SpF;
-            extra_slot = 0;
-            info.padding = 0;
-        } else
-        {
-            extra_slot = 1;
-            info.padding = 1;
-            slot_lag += (1 - frac_SpF);
-        }
+    if (sCodec.bitrate == -1) {
+        if (sCodec.mode == 3)
+            sCodec.bitrate = 64;
+        else
+            sCodec.bitrate = 128;
     }
 
 
-    bitsPerFrame = 8 * whole_SpF + (info.padding * 8);
+    pCodecInfo = codecInit(&sCodec);
 
-    /*		determine the mean bitrate for main data */
 
-    sideinfo_len = 32;
+    samplesPerFrame = pCodecInfo->nSamples;
 
-    if (stereo == 1)
-        sideinfo_len += 136;
+    pBuffer = (char *) malloc(pCodecInfo->bufferSize);
+
+}
+
+unsigned int Process::EncodeChunk(AudioBuffer& newBuffer) {
+
+    
+     static int inc =0 ;
+
+ 
+    
+    if (inc + samplesPerFrame < newBuffer.size())
+    {
+        int encodedChunkSize = codecEncodeChunk(samplesPerFrame, &newBuffer[inc], pBuffer);
+        if (encodedChunkSize != 0)
+            outputFile.write(pBuffer, encodedChunkSize);
+     
+         inc = inc + samplesPerFrame;
+    }
     else
-        sideinfo_len += 256;
+    {
+         Exit();
+    }
 
-    if (info.error_protection)
-        sideinfo_len += 16;
-    mean_bits = (bitsPerFrame - sideinfo_len) / 2;
-
-    static int inc =0 ;
-
-    /*		psychoacoustic model */
-
-    for (gr = 0; gr < 2; gr++)
-        for (ch = 0; ch < stereo; ch++) {
-            psycho_anal.psycho_anal(&newBuffer[ch][gr * 576], &sam[ch][0], ch, 3, snr32, &ratio.l[gr][ch][0],
-                    &ratio.s[gr][ch][0], &pe[gr][ch], &l3_side.gr[gr].ch[ch].tt);
-
-        }
-
-    if (inc + 1152 < newBuffer.size())
-        inc = inc + 1152;
- return 0;   
+    
+    return 0;
+    
+    
 }
+

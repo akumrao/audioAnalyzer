@@ -5,7 +5,12 @@
 
         @author Arvid Umrao <akumrao@yahoo.com> <arvind.umrao@harman.com>
         @version 0.1
+ * 
+ *     download wave test file from http://mauvecloud.net/sounds/index.html
  */
+
+#define GRAPH  0
+
 #include "stdio.h"
 #include "plot/plot.h"
 
@@ -325,50 +330,58 @@ int main(int argc, char* argv[]) {
     }
 */
    /*
-     {
-         //populate caption list
-         captionlist caption_list = NULL;
+      {
+          //populate caption list
+          captionlist caption_list = NULL;
 
-         caption_list = push_back_caption(caption_list, "Sine", 0, 0x0000FF);
+          caption_list = push_back_caption(caption_list, "Sine", 0, 0x0000FF);
 
-         coordlist coordinate_list = NULL;
+          coordlist coordinate_list = NULL;
 
-         for (int i = 0; i < 18; ++i) {
-             coordinate_list = push_back_coord(coordinate_list, 0, i, sin(i));
-         }
+          for (int i = 0; i < 18; ++i) {
+              coordinate_list = push_back_coord(coordinate_list, 0, i, sin(i));
+          }
         
             
 
-         print_list_coord(coordinate_list);
+          print_list_coord(coordinate_list);
 
-         //populate plot parameter object
-         plot_params *params = new plot_params("x", "Y", caption_list, coordinate_list);
+          //populate plot parameter object
+          plot_params *params = new plot_params("x", "Y", caption_list, coordinate_list);
 
-         //  Plot_Window_params win_param;
-         push_back_plot_win(params);
+          //  Plot_Window_params win_param;
+          push_back_plot_win(params);
 
-     }
-   */
+      }
+     */
 
-   
-    
-    Plot plot;  //std::bind( &Foo::print_add, foo, _1 );
+
+#if GRAPH ==1
+    Plot plot; //std::bind( &Foo::print_add, foo, _1 );
     // using std::placeholders::_1;
-  //  plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, &audioFile );
-   //    std::function<bool(void)> d1 =  std::bind( &AudioFile<double>::analyzeWave, &audioFile );
-      
-     plot.f_callback_stop= std::bind( &AudioFile<double>::stop, &audioFile );
-    
+    //  plot.f_callback = std::bind( &AudioFile<double>::analyzeWave, &audioFile );
+    //    std::function<bool(void)> d1 =  std::bind( &AudioFile<double>::analyzeWave, &audioFile );
+
+    plot.f_callback_stop = std::bind(&AudioFile<double>::stop, &audioFile);
+#endif
    
     audioFile.printSummary();
     audioFile.play();
 
+#if GRAPH ==1
     int ret = plot.plot_graph("Plot");
 
     if (ret == EXIT_FAILURE) {
         printf("plot_graph return with status %d\n", ret);
         return EXIT_FAILURE;
     }
+#else
+    
+    cout << "Press a Key to exit main....." << endl <<endl;
+
+    getchar();
+    
+#endif
 
     return EXIT_SUCCESS;
 }

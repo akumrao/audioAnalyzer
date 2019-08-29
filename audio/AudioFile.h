@@ -82,7 +82,7 @@ public:
     
     std::vector<uint8_t> rawPCMInt;
     std::vector<float> rawPCMFloat;
-    std::vector<std::vector<int16_t> >rawPCMint16;
+    std::vector<int16_t> rawPCMint16;
     int alradyPlayed;
      
      
@@ -90,6 +90,7 @@ public:
     //=============================================================
     /** Constructor */
     AudioFile();
+    ~AudioFile();
         
     //=============================================================
     /** Loads an audio file from a given file path.
@@ -97,7 +98,7 @@ public:
      */
     bool load (std::string filePath);
     
-    bool openWave (std::string filePath);
+    //bool openWave (std::string filePath);
     
     bool analyzeWave();
     
@@ -164,7 +165,7 @@ public:
      *      samples[channel][sampleIndex]
      */
     AudioBuffer samples;
-        std::FILE* infile;
+       // std::FILE* infile;
 private:
     
     //=============================================================
@@ -236,8 +237,9 @@ private:
 
     public:
 
+    #if GRAPH ==1
     plot_params *params1; 
-    
+    #endif
     
     private:
 

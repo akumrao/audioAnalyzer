@@ -14,77 +14,49 @@
 #ifndef PROCESS_H
 #define PROCESS_H
 
-#include "Common.h"
-#include "Psycho_anal.h"
+typedef short int		int16_t;
+#include <vector>
+#include <fstream>
+
+using namespace std;
+
+#include	"encoder/common.h"
+#include	"encoder/codec.h"
+
+//#include "Common.h"
+///#include "Psycho_anal.h"
+//#include "Encoder.h"
 /* Header Information Structure */
 
-typedef struct {
-    int version;
-    int error_protection;
-    int bitrate_index;
-    int sampling_frequency;
-    int padding;
-    int extension;
-    int mode;
-    int mode_ext;
-    int copyright;
-    int original;
-    int emphasis;
-/*		int	freq; */
-} layer, *the_layer;
 
-typedef struct {
-	double	l[2][2][21];
-	double	s[2][2][12][3];
-} III_psy_ratio;
-
-typedef struct {
-	int main_data_begin; /* unsigned -> int */
-	unsigned private_bits;
-	int resvDrain;
-	unsigned scfsi[2][4];
-	struct {
-		struct gr_info_s {
-			gr_info tt;
-			} ch[2];
-		} gr[2];
-	} III_side_info_t;
 
 class Process {
 public:
     
     
-    typedef std::vector<std::vector<int16_t> > AudioBuffer;
+    typedef std::vector<int16_t>  AudioBuffer;
     
-     typedef std::vector<std::vector<float> > AudioBuffer1;
-     typedef std::vector<std::vector<double> > AudioBuffer2;
+     typedef std::vector<float>  AudioBuffer1;
+     typedef std::vector<double>  AudioBuffer2;
      
      
-    Process();
-    Process(const Process& orig);
-    virtual ~Process();
-    void rebuffer_audio(short buffer[2][1152], short * insamp, unsigned int samples_read, int stereo);
-    unsigned int codecEncodeChunk(AudioBuffer& newBuffer);
-    unsigned int codecEncodeChunk(AudioBuffer1& newBuffer){};
-    unsigned int codecEncodeChunk(AudioBuffer2& newBuffer){};
+    Process(const char * filePat);
 
-    void Init(double sfreq);
+    virtual ~Process();
+    unsigned int EncodeChunk(AudioBuffer& newBuffer);
+    unsigned int EncodeChunk(AudioBuffer1& newBuffer){};
+    unsigned int EncodeChunk(AudioBuffer2& newBuffer){};
+
+    void Init(int sfreq, int mode);
+    void Exit();
 private:
-    char * pEncodedOutput;
-    int outputBit;
-     short buffer[2][1152];
-     int stereo;
-     double frac_SpF, slot_lag;
-     int whole_SpF, extra_slot;
-     layer info;
-     short sam[2][1344];
-     float snr32[32];
-     III_psy_ratio ratio;
-      III_side_info_t l3_side;
-      
-      
+    
+    	CodecInitOut			*pCodecInfo;
+	char					*pBuffer ;   /* Initialized just to prevent compiler warnings */
+    
 private:
-     Psycho_anal psycho_anal;  
+    int						samplesPerFrame ; 
+    std::ofstream outputFile;
 };
 
 #endif /* PROCESS_H */

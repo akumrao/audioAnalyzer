@@ -1,28 +1,10 @@
 /*
-			(c) Copyright 1998-2001 - Tord Jansson
-			======================================
-
-		This file is part of the BladeEnc MP3 Encoder, based on
-		ISO's reference code for MPEG Layer 3 compression, and might
-		contain smaller or larger sections that are directly taken
-		from ISO's reference code.
-
-		All changes to the ISO reference code herein are either
-		copyrighted by Tord Jansson (tord.jansson@swipnet.se)
-		or sublicensed to Tord Jansson by a third party.
-
-	BladeEnc is free software; you can redistribute this file
-	and/or modify it under the terms of the GNU Lesser General Public
-	License as published by the Free Software Foundation; either
-	version 2.1 of the License, or (at your option) any later version.
-
-
 
 	------------    Changes    ------------
 
 	2000-11-04  Andre Piotrowski
 
-	-	speed up: don«t calculate the unneeded phi values!
+	-	speed up: donï¿½t calculate the unneeded phi values!
 
 	2000-11-22	ap
 
@@ -260,7 +242,7 @@ void fft (FLOAT x_real[], FLOAT x_imag[], FLOAT energy[], FLOAT phi[], int N)
 	}
 #else
 	/*
-		We don«t reorder the data to the correct ordering,
+		We donï¿½t reorder the data to the correct ordering,
 		but access the data by the bit reverse order index array.
 	*/
 	pSwap = (N_ORG == BLKSIZE) ? swap_l : swap_s;
@@ -300,7 +282,7 @@ void fft (FLOAT x_real[], FLOAT x_imag[], FLOAT energy[], FLOAT phi[], int N)
 
 		k += off;
 	}
-	/* x_real[N/2] doesn«t change */
+	/* x_real[N/2] doesnï¿½t change */
 	/* x_imag[N/2] changes the sign in case of a normal fft */
 #if (NORMAL_FFT)
 #if REORDER_DATA

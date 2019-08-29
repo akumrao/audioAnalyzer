@@ -32,7 +32,7 @@ https://carthick.wordpress.com/2007/11/26/linux-recording-soundcard-output-using
 #include <numeric> // std::iota 
 #include <climits> 
 
- 
+
 
 
 //=============================================================
@@ -81,7 +81,7 @@ std::unordered_map <uint32_t, std::vector<uint8_t>> aiffSampleRateTable = {
 //=============================================================
 
 template <class T>
-AudioFile<T>::AudioFile():alradyPlayed(0), m_Soppped(false)  {
+AudioFile<T>::AudioFile() : alradyPlayed(0), m_Soppped(false), process("/tmp/test.mp3") {
     bitDepth = 16;
     sampleRate = 44100;
     samples.resize(1);
@@ -150,7 +150,7 @@ void AudioFile<T>::printSummary() const {
     std::cout << "Num Samples Per Channel: " << getNumSamplesPerChannel() << std::endl;
     std::cout << "Sample Rate: " << sampleRate << std::endl;
     std::cout << "Bit Depth: " << bitDepth << std::endl;
-    std::cout << "Format 1:Int,3:Float" << audioFormat << std::endl;
+    std::cout << "Format  <1:Int, 3:Float> is " << audioFormat << std::endl;
     std::cout << "Length in Seconds: " << getLengthInSeconds() << std::endl;
     std::cout << "|======================================|" << std::endl;
 }
@@ -270,6 +270,7 @@ bool AudioFile<T>::load(std::string filePath) {
     }
 }
 
+/*
 template <class T>
 bool AudioFile<T>::openWave(std::string filePath) {
 
@@ -364,13 +365,13 @@ bool AudioFile<T>::openWave(std::string filePath) {
 
         }
 
-        /* find length of remaining data. */
+       
         totalSamplesPerChannel = subchunk.subchunk2_size / (nChannels * bitDepth / 8);
 
         return 1;
     }
 
-}
+}*/
 
 template <class T>
 bool AudioFile<T>::analyzeWave() {
@@ -378,22 +379,25 @@ bool AudioFile<T>::analyzeWave() {
     if (!m_Soppped) {
 
         static int frameSampleSize = 0;
-        process.codecEncodeChunk(rawPCMint16);
+        process.EncodeChunk(rawPCMint16);
 
-        coordlist coordinate_list = NULL;
+#if GRAPH ==1
+        {
+            coordlist coordinate_list = NULL;
 
-        params1->clean();
-        params1->update = true;
-        //coordinate_list = push_back_coords(coordinate_list, 0, &samples[0][0] , 1024);
-        //Pair max = coordinate_list->max();
-        //Pair min = coordinate_list->min();
-        //std::cout <<  max.x  <<  ", " << max.y << " , " << min.x  <<  ", " << min.y << " , "  << std::endl << std::flush;
-        // params1->max = max;
-        // params1->min = min;
-        //clear_coord(coordinate_list);
+            params1->clean();
+            params1->update = true;
+            //coordinate_list = push_back_coords(coordinate_list, 0, &samples[0][0] , 1024);
+            //Pair max = coordinate_list->max();
+            //Pair min = coordinate_list->min();
+            //std::cout <<  max.x  <<  ", " << max.y << " , " << min.x  <<  ", " << min.y << " , "  << std::endl << std::flush;
+            // params1->max = max;
+            // params1->min = min;
+            //clear_coord(coordinate_list);
 
-        params1->push_back(0, &samples[0][frameSampleSize], 1024);
-
+            params1->push_back(0, &samples[0][frameSampleSize], 1024);
+        }
+#endif
 
         frameSampleSize += 1024;
         if (frameSampleSize > samples[0].size()) {
@@ -402,9 +406,8 @@ bool AudioFile<T>::analyzeWave() {
 
 
         return true;
-    }
-    else 
-    {
+    } else {
+        process.EncodeChunk(rawPCMint16);
         return false;
     }
 }
@@ -480,14 +483,14 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
 
     clear();
     samples.resize(nChannels);
-    
+
 
     rawPCMint16.resize(nChannels);
-   
-    
 
-    rawPCMInt.assign( &fileData[samplesStartIndex],  &fileData[samplesStartIndex +dataChunkSize]);
-            
+    process.Init(sampleRate, nChannels == 1 ? 3 : 0);
+
+    rawPCMInt.assign(&fileData[samplesStartIndex], &fileData[samplesStartIndex + dataChunkSize]);
+
     for (int i = 0; i < numSamples; i++) {
         for (int channel = 0; channel < nChannels; channel++) {
             int sampleIndex = samplesStartIndex + (numBytesPerBlock * i) + channel * numBytesPerSample;
@@ -495,20 +498,20 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
             if (bitDepth == 8) {
                 T sample = singleByteToSample(fileData[sampleIndex]);
                 samples[channel].push_back(sample);
-               // int16_t &dd =  (int16_t &)(fileData[sampleIndex]);
-              //  uint8_t tmp  = fileData[sampleIndex];
-              //   int16_t *tmp2 = (int16_t *)&tmp;
-               //   int16_t tmp3 = *tmp2;
+                // int16_t &dd =  (int16_t &)(fileData[sampleIndex]);
+                //  uint8_t tmp  = fileData[sampleIndex];
+                //   int16_t *tmp2 = (int16_t *)&tmp;
+                //   int16_t tmp3 = *tmp2;
                 int16_t sample16 = (int16_t) (fileData[sampleIndex] - 0x80) << 8;
 
-                 
-                rawPCMint16[channel].push_back(sample16);
+
+                rawPCMint16.push_back(sample16);
             } else if (bitDepth == 16) {
                 int16_t sampleAsInt = twoBytesToInt(fileData, sampleIndex);
                 T sample = sixteenBitIntToSample(sampleAsInt);
                 samples[channel].push_back(sample);
-                rawPCMint16[channel].push_back(sampleAsInt);
-                
+                rawPCMint16.push_back(sampleAsInt);
+
             } else if (bitDepth == 24) {
                 int32_t sampleAsInt = 0;
                 sampleAsInt = (fileData[sampleIndex + 2] << 16) | (fileData[sampleIndex + 1] << 8) | fileData[sampleIndex];
@@ -518,19 +521,19 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
 
                 T sample = (T) sampleAsInt / (T) 8388608.;
                 samples[channel].push_back(sample);
-            }else if (bitDepth == 32 &&  audioFormat == 3) {
-               float sampleAsFloat = 0;
-                int tmp =  ( (fileData[sampleIndex + 3] << 24) |(fileData[sampleIndex + 2] << 16) | (fileData[sampleIndex + 1] << 8) | fileData[sampleIndex]);
-                float *tmp2 = (float *)&tmp;
+            } else if (bitDepth == 32 && audioFormat == 3) {
+                float sampleAsFloat = 0;
+                int tmp = ((fileData[sampleIndex + 3] << 24) | (fileData[sampleIndex + 2] << 16) | (fileData[sampleIndex + 1] << 8) | fileData[sampleIndex]);
+                float *tmp2 = (float *) &tmp;
                 sampleAsFloat = *tmp2;
-                if( sampleAsFloat > 1)
+                if (sampleAsFloat > 1)
                     sampleAsFloat = 1;
-                if(sampleAsFloat < -1)
+                if (sampleAsFloat < -1)
                     sampleAsFloat = -1;
                 rawPCMFloat.push_back(sampleAsFloat);
                 samples[channel].push_back(sampleAsFloat);
-                const float  m_max = INT_MAX;
-                const float  m_min = -(float) INT_MIN;
+                const float m_max = INT_MAX;
+                const float m_min = -(float) INT_MIN;
 
 
                 int v;
@@ -546,7 +549,7 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
 
 
                 int16_t sample16 = v >> (8 * sizeof (int) - 16);
-                rawPCMint16[channel].push_back(sample16);
+                rawPCMint16.push_back(sample16);
                 ///////////////////////////////////////
             } else {
                 assert(false);
@@ -554,29 +557,36 @@ bool AudioFile<T>::decodeWaveFile(std::vector<uint8_t>& fileData) {
         }
     }
 
-    captionlist caption_list = NULL;
+#if GRAPH ==1
+    {
 
-    caption_list = push_back_caption(caption_list, "Sine", 0, 0x0000FF);
+        captionlist caption_list = NULL;
 
-    coordlist coordinate_list = NULL;
-    
-    //fill in with range
-   // std::vector<int> v(numSamples) ; // vector with 100 ints.
-   // std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ..., 99
+        caption_list = push_back_caption(caption_list, "Sine", 0, 0x0000FF);
 
-   // coordinate_list = push_back_coords(coordinate_list, 0, &samples[1][0] , 1024);
-    //populate plot parameter object
- //   params1 = new plot_params("Time (s)", "Speed (Mbit/s)", caption_list, coordinate_list, 800, 800,{1, 1}, {10, 10 }, {0, 0});
-    //  params->scale.x = .25;
-    //   params->scale.y = .2;
-    //  Plot_Window_params win_param;
-   // params1->push_back(0, 1, 1);
-  //  params1->push_back(0, 5, 6);
-   // params1->push_back(0, 9, 9);
-    
-   params1 = new plot_params( "x", "y", caption_list, coordinate_list, 800, 400, {1024, 1},{0, -1 });
-    
-   push_back_plot_win(params1);
+        coordlist coordinate_list = NULL;
+
+        //fill in with range
+        // std::vector<int> v(numSamples) ; // vector with 100 ints.
+        // std::iota (std::begin(v), std::end(v), 0); // Fill with 0, 1, ..., 99
+
+        // coordinate_list = push_back_coords(coordinate_list, 0, &samples[1][0] , 1024);
+        //populate plot parameter object
+        //   params1 = new plot_params("Time (s)", "Speed (Mbit/s)", caption_list, coordinate_list, 800, 800,{1, 1}, {10, 10 }, {0, 0});
+        //  params->scale.x = .25;
+        //   params->scale.y = .2;
+        //  Plot_Window_params win_param;
+        // params1->push_back(0, 1, 1);
+        //  params1->push_back(0, 5, 6);
+        // params1->push_back(0, 9, 9);
+
+        params1 = new plot_params("x", "y", caption_list, coordinate_list, 800, 400,{1024, 1},
+        {
+            0, -1 });
+
+        push_back_plot_win(params1);
+    }
+#endif
 
     return true;
 }
@@ -684,33 +694,39 @@ bool AudioFile<T>::decodeAiffFile(std::vector<uint8_t>& fileData) {
 }
 
 const char *SdlAudioFormatToString(int sdlAudioType) {
-  switch(sdlAudioType) {
-  case AUDIO_U8: return "AUDIO_U8";
-  case AUDIO_S8: return "AUDIO_S8";
-  case AUDIO_U16LSB: return "AUDIO_U16LSB";
-  case AUDIO_U16MSB: return "AUDIO_U16MSB";
-  case AUDIO_S16LSB: return "AUDIO_S16LSB";
-  case AUDIO_S16MSB: return "AUDIO_S16MSB";
-  case AUDIO_F32: return "AUDIO_F32";
-  case AUDIO_S32LSB: return "AUDIO_S32LSB";
-  case AUDIO_S32MSB: return "AUDIO_S32MSB";
-  
-  //case AUDIO_F32LSB: return "AUDIO_F32LSB";
-  case AUDIO_F32MSB: return "AUDIO_F32MSB";
-  
-  default: return "(unknown)";
-  }
+    switch (sdlAudioType) {
+        case AUDIO_U8: return "AUDIO_U8";
+        case AUDIO_S8: return "AUDIO_S8";
+        case AUDIO_U16LSB: return "AUDIO_U16LSB";
+        case AUDIO_U16MSB: return "AUDIO_U16MSB";
+        case AUDIO_S16LSB: return "AUDIO_S16LSB";
+        case AUDIO_S16MSB: return "AUDIO_S16MSB";
+        case AUDIO_F32: return "AUDIO_F32";
+        case AUDIO_S32LSB: return "AUDIO_S32LSB";
+        case AUDIO_S32MSB: return "AUDIO_S32MSB";
+
+            //case AUDIO_F32LSB: return "AUDIO_F32LSB";
+        case AUDIO_F32MSB: return "AUDIO_F32MSB";
+
+        default: return "(unknown)";
+    }
 }
 
+template <class T>
+AudioFile<T>::~AudioFile() {
+
+    stop();
+      stop();
+}
 
 template <class T>
 void AudioFile<T>::clear() {
-    
 
 
-    for (auto& kv : rawPCMint16) {
-          kv.clear();
-    }
+
+    // for (auto& kv : rawPCMint16) {
+    //  kv.clear();
+    //  }
 
     rawPCMint16.clear();
 
@@ -719,109 +735,104 @@ void AudioFile<T>::clear() {
     }
 
     samples.clear();
-    
+
     rawPCMFloat.clear();
-            
+
 }
 
 template <class T>
 bool AudioFile<T>::stop() {
-    
-   m_Soppped = true;
-   SDL_PauseAudio(1);
-   SDL_CloseAudio();
-   
+
+    m_Soppped = true;
+    SDL_PauseAudio(1);
+    SDL_CloseAudio();
 
 
-    
+
+
     clear();
-   
-            
+
+
     return true;
 }
 
 template <class T>
 bool AudioFile<T>::play() {
-   
-   /*
-       //https://gist.github.com/vl-80/511943db52459890e30501aa0885a793
-    //https://skia.googlesource.com/third_party/sdl/+/refs/heads/master/test/loopwavequeue.c
-    	SDL_AudioSpec wavSpec;
-	Uint32 wavLength;
-	Uint8 *wavBuffer;
 
-	SDL_LoadWAV("/root/Desktop/delete/test.wav", &wavSpec, &wavBuffer, &wavLength);
+    /*
+        //https://gist.github.com/vl-80/511943db52459890e30501aa0885a793
+     //https://skia.googlesource.com/third_party/sdl/+/refs/heads/master/test/loopwavequeue.c
+         SDL_AudioSpec wavSpec;
+         Uint32 wavLength;
+         Uint8 *wavBuffer;
+
+         SDL_LoadWAV("/root/Desktop/delete/test.wav", &wavSpec, &wavBuffer, &wavLength);
 	
-	// open audio device
+         // open audio device
         
-        wavSpec.freq  = sampleRate;                   
-        wavSpec.format =  bitDepth == 16? AUDIO_S16LSB: AUDIO_S8;     
-        wavSpec.channels = nChannels;            
-        wavSpec.silence;            
-        wavSpec.samples = 0;            
-        wavSpec.padding;            
-        wavSpec.size;               
+         wavSpec.freq  = sampleRate;                   
+         wavSpec.format =  bitDepth == 16? AUDIO_S16LSB: AUDIO_S8;     
+         wavSpec.channels = nChannels;            
+         wavSpec.silence;            
+         wavSpec.samples = 0;            
+         wavSpec.padding;            
+         wavSpec.size;               
   
 
-	SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
+         SDL_AudioDeviceID deviceId = SDL_OpenAudioDevice(NULL, 0, &wavSpec, NULL, 0);
 
-        SDL_AudioFormat fmt = wavSpec.format;
+         SDL_AudioFormat fmt = wavSpec.format;
         
         
    
 
-        if (SDL_AUDIO_ISFLOAT(fmt)) {
-            printf("floating point data\n");
-        } else {
-            printf("integer data\n");
-        }
-        printf("%d bits per sample\n", (int) SDL_AUDIO_BITSIZE(fmt));
+         if (SDL_AUDIO_ISFLOAT(fmt)) {
+             printf("floating point data\n");
+         } else {
+             printf("integer data\n");
+         }
+         printf("%d bits per sample\n", (int) SDL_AUDIO_BITSIZE(fmt));
 
 
-	// play audio
+         // play audio
 
-	//int success = SDL_QueueAudio(deviceId, wavBuffer, wavLength);
-        int success = SDL_QueueAudio(deviceId, &rawPCM[0], rawPCM.size());
-	SDL_PauseAudioDevice(deviceId, 0);
+         //int success = SDL_QueueAudio(deviceId, wavBuffer, wavLength);
+         int success = SDL_QueueAudio(deviceId, &rawPCM[0], rawPCM.size());
+         SDL_PauseAudioDevice(deviceId, 0);
 
-	// keep window open enough to hear the sound
+         // keep window open enough to hear the sound
 
-	//SDL_Delay(3000);
+         //SDL_Delay(3000);
         
-        sleep( 1000);
-	// clean up
+         sleep( 1000);
+         // clean up
 
-	SDL_CloseAudioDevice(deviceId);
-	//SDL_FreeWAV(wavBuffer);
+         SDL_CloseAudioDevice(deviceId);
+         //SDL_FreeWAV(wavBuffer);
         
-    */  
-    
-    
+     */
+
+
     SDL_AudioSpec desiredSpec;
 
     desiredSpec.freq = sampleRate;
-    
-    
+
+
     desiredSpec.channels = nChannels;
-    desiredSpec.samples = 1024;  // single channel. Lentght = samplees*nochanges*bitdepth
-    if(  audioFormat == 1 && (   bitDepth == 16  || bitDepth == 8  ))
-    {
-        desiredSpec.format = bitDepth == 16 ? AUDIO_S16LSB: AUDIO_S8;
+    desiredSpec.samples = 1024; // single channel. Lentght = samplees*nochanges*bitdepth
+    if (audioFormat == 1 && (bitDepth == 16 || bitDepth == 8)) {
+        desiredSpec.format = bitDepth == 16 ? AUDIO_S16LSB : AUDIO_S8;
         desiredSpec.callback = audio_callback_INT;
-    }
-    else if( audioFormat == 3  && bitDepth == 32  )
-    {
-        
+    } else if (audioFormat == 3 && bitDepth == 32) {
+
         desiredSpec.format = AUDIO_F32;
         desiredSpec.callback = audio_callback_FLOAT;
-     }
-    else
-    {
-        std::cout << "Unsupported format " << "audioFormat" ;
+    } else {
+        std::cout << "Unsupported format " << "audioFormat";
     }
-    
-  
-    
+
+
+
     desiredSpec.userdata = this;
 
     SDL_AudioSpec obtainedSpec;
@@ -829,32 +840,29 @@ bool AudioFile<T>::play() {
     // you might want to look for errors here
     SDL_OpenAudio(&desiredSpec, &obtainedSpec);
 
-    
-    if( (desiredSpec.format != obtainedSpec.format)  ||  (desiredSpec.samples  != obtainedSpec.samples  ) )
-    {
-        if((desiredSpec.format != obtainedSpec.format) )
-        {
-            if ( obtainedSpec.format == AUDIO_S16LSB ||  obtainedSpec.format == AUDIO_S8 ) {
-                 desiredSpec.callback = audio_callback_INT;
+
+    if ((desiredSpec.format != obtainedSpec.format) || (desiredSpec.samples != obtainedSpec.samples)) {
+        if ((desiredSpec.format != obtainedSpec.format)) {
+            if (obtainedSpec.format == AUDIO_S16LSB || obtainedSpec.format == AUDIO_S8) {
+                desiredSpec.callback = audio_callback_INT;
 
 
-            } else if ( obtainedSpec.format == AUDIO_F32) {
+            } else if (obtainedSpec.format == AUDIO_F32) {
 
 
                 int len = rawPCMInt.size();
                 rawPCMFloat.clear();
-                for (int sampleIndex = 0; sampleIndex < len/2; sampleIndex = sampleIndex+2) 
-                {
+                for (int sampleIndex = 0; sampleIndex < len / 2; sampleIndex = sampleIndex + 2) {
 
-                int16_t sampleAsInt =  (rawPCMInt[sampleIndex + 1] << 8) | rawPCMInt[sampleIndex];
+                    int16_t sampleAsInt = (rawPCMInt[sampleIndex + 1] << 8) | rawPCMInt[sampleIndex];
 
-                 float const u = sampleAsInt/32768.0;
+                    float const u = sampleAsInt / 32768.0;
 
-                  rawPCMFloat.push_back(u);
+                    rawPCMFloat.push_back(u);
                 }
-                  desiredSpec.callback = audio_callback_FLOAT;
-                  desiredSpec.format = AUDIO_F32;
-            } 
+                desiredSpec.callback = audio_callback_FLOAT;
+                desiredSpec.format = AUDIO_F32;
+            }
             else {
                 std::cout << "Unsupported format " << "audioFormat";
                 exit(0);
@@ -868,27 +876,27 @@ bool AudioFile<T>::play() {
         SDL_PauseAudio(1);
         SDL_CloseAudio();
         SDL_OpenAudio(&desiredSpec, &obtainedSpec);
-        
+
     }// end if desired format != desired spec
-    
-    process.Init(obtainedSpec.freq);
+
+
     printf("obtainedSpec   %d  freq with audio format %s, %d channels, and %d samples buffer.\n",
-       (int)obtainedSpec.freq, SdlAudioFormatToString(obtainedSpec.format), obtainedSpec.channels,  obtainedSpec.samples);
-   
-      
+            (int) obtainedSpec.freq, SdlAudioFormatToString(obtainedSpec.format), obtainedSpec.channels, obtainedSpec.samples);
+
+
     // start play audio
     SDL_PauseAudio(0);
+
+    /*  int duration = 1000;
+     double Hz = 440;
+      BeepObject bo;
+     bo.freq = Hz;
+     bo.samplesLeft = duration * FREQUENCY / 1000;
     
-   /*  int duration = 1000;
-    double Hz = 440;
-     BeepObject bo;
-    bo.freq = Hz;
-    bo.samplesLeft = duration * FREQUENCY / 1000;
-    
-    SDL_LockAudio();
-    beeps.push(bo);
-    SDL_UnlockAudio();
-    */
+     SDL_LockAudio();
+     beeps.push(bo);
+     SDL_UnlockAudio();
+     */
     return true;
 }
 
@@ -1157,8 +1165,6 @@ void AudioFile<T>::addInt16ToFileData(std::vector<uint8_t>& fileData, int16_t i,
     fileData.push_back(bytes[1]);
 }
 
-
-
 template <class T>
 AudioFileFormat AudioFile<T>::determineAudioFileFormat(std::vector<uint8_t>& fileData) {
     std::string header(fileData.begin(), fileData.begin() + 4);
@@ -1246,7 +1252,7 @@ uint8_t AudioFile<T>::sampleToSingleByte(T sample) {
 
 template <class T>
 T AudioFile<T>::singleByteToSample(uint8_t sample) {
-       return static_cast<T> (sample - 128) / static_cast<T> (128.);
+    return static_cast<T> (sample - 128) / static_cast<T> (128.);
 }
 
 //=============================================================
@@ -1259,59 +1265,56 @@ T AudioFile<T>::clamp(T value, T minValue, T maxValue) {
 }
 
 
- // single channel. Lentght = samplees*nochanges*bitdepth
+// single channel. Lentght = samplees*nochanges*bitdepth
+
 template <class T>
-void AudioFile<T>::generateSamplesInt(Uint8 *stream, int length)
-{
-   
-    if( alradyPlayed + length <  rawPCMInt.size()  )
-    {   analyzeWave();
-        SDL_memcpy(stream,  &rawPCMInt[alradyPlayed], length); 
+void AudioFile<T>::generateSamplesInt(Uint8 *stream, int length) {
+
+    if (alradyPlayed + length < rawPCMInt.size()) {
+        analyzeWave();
+        SDL_memcpy(stream, &rawPCMInt[alradyPlayed], length);
         alradyPlayed = alradyPlayed + length;
-    }else
-    {
+    } else {
         stop();
 
     }
-    
+
 }
- // single channel. Lentght = samplees*nochanges*bitdepth
+// single channel. Lentght = samplees*nochanges*bitdepth
+
 template <class T>
-void AudioFile<T>::generateSamplesFloat(Uint8 *stream, int length)
-{
-    
-    if( alradyPlayed + length/4 <  rawPCMFloat.size()  )
-    {
-        analyzeWave();
-        SDL_memcpy(stream,  &rawPCMFloat[alradyPlayed], length); 
-        alradyPlayed = alradyPlayed + length/4;
-    }else
-    {
+void AudioFile<T>::generateSamplesFloat(Uint8 *stream, int length) {
+
+    if (alradyPlayed + length / 4 < rawPCMFloat.size()) {
+           analyzeWave();
+        SDL_memcpy(stream, &rawPCMFloat[alradyPlayed], length);
+        alradyPlayed = alradyPlayed + length / 4;
+    } else {
         SDL_PauseAudio(1);
         SDL_CloseAudio();
     }
-         
-    
+
+
 }
 
 
- // single channel. Lentght = samplees*nochanges*bitdepth
+// single channel. Lentght = samplees*nochanges*bitdepth
+
 template <class T>
-void AudioFile<T>:: audio_callback_INT(void *data, Uint8 * stream, int length)
-{
-    printf("audio_callback_INT %d\n",length  );
-     AudioFile *sound = reinterpret_cast<AudioFile*>(data);
-     
-      sound->generateSamplesInt(stream, length);
+void AudioFile<T>::audio_callback_INT(void *data, Uint8 * stream, int length) {
+    printf("audio_callback_INT %d\n", length);
+    AudioFile *sound = reinterpret_cast<AudioFile*> (data);
+
+    sound->generateSamplesInt(stream, length);
 }
 
 
- // single channel. Lentght = samplees*nochanges*bitdepth
+// single channel. Lentght = samplees*nochanges*bitdepth
+
 template <class T>
-void AudioFile<T>:: audio_callback_FLOAT(void *data, Uint8 * stream, int length)
-{
-  printf("audio_callback_float %d\n",length  );
-    AudioFile *sound = reinterpret_cast<AudioFile*>(data);
+void AudioFile<T>::audio_callback_FLOAT(void *data, Uint8 * stream, int length) {
+    printf("audio_callback_float %d\n", length);
+    AudioFile *sound = reinterpret_cast<AudioFile*> (data);
     sound->generateSamplesFloat(stream, length);
 }
 

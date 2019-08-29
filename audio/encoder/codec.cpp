@@ -105,7 +105,11 @@ CodecInitOut			*codecInit (CodecInitIn *psIn)
 		case 48000:  info.sampling_frequency = 1;  break;
 	  	case 44100:  info.sampling_frequency = 0;  break;
 	  	case 32000:  info.sampling_frequency = 2;  break;
-	  	default   :  return FALSE;
+	  	default   : 
+                {
+                    printf(" Supported frequency range [48000-32000]. Does not support frequency %d " , psIn->frequency);
+                    exit(0);
+                }
 	}
 
 	switch (psIn->mode)
