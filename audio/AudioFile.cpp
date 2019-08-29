@@ -716,7 +716,7 @@ template <class T>
 AudioFile<T>::~AudioFile() {
 
     stop();
-      stop();
+    
 }
 
 template <class T>
