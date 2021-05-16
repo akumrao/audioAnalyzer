@@ -109,6 +109,25 @@ Sine and cosine waves can be used as basic building blocks of more complex waves
 
 Sound localization is often more difficult with pure tones than with other sounds.[2
 
+
+to compile
+
+git clone https://github.com/emscripten-core/emsdk.git
+
+ cd emsdk
+./emsdk install latest
+
+./emsdk activate latest
+
+
+root:emsdk# emcc
+
+
+make 
+
+make wasm
+
+
 License
 -------
 
