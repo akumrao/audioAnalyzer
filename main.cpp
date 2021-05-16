@@ -9,7 +9,7 @@
  *     download wave test file from http://mauvecloud.net/sounds/index.html
  */
 
-#define GRAPH  0
+#define GRAPH  1
 
 #include "stdio.h"
 #include "plot/plot.h"

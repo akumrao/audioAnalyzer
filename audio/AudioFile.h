@@ -7,6 +7,7 @@
 
 #ifndef _AS_AudioFile_h
 #define _AS_AudioFile_h
+#define GRAPH  1
 
 #include <iostream>
 #include <vector>

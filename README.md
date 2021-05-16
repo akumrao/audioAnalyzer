@@ -127,6 +127,9 @@ make
 
 make wasm
 
+chmod +x servewasm.py
+./servewasm.py
+
 
 License
 -------
